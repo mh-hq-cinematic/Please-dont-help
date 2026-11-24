@@ -107,6 +107,9 @@ blockquote { margin: 0; padding-left: 1rem; border-left: 3px solid var(--ink); d
 .able p { font-size: .93rem }
 .able-btn { justify-self: start; text-decoration: none; display: inline-block }
 .able-btn:hover { background: var(--ink); color: var(--sheet) }
+.clip { margin: 0; display: grid; gap: .45rem }
+.clip video { width: 100%; height: auto; display: block; background: #000; border: 1px solid var(--rule); box-shadow: 5px 5px 0 var(--rule) }
+.clip figcaption { font: .78rem/1.4 var(--mono); color: var(--muted) }
 /* Photos */
 .photos { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem }
 .photos figure { margin: 0; display: grid; grid-template-rows: 1fr auto; gap: .3rem; min-width: 0; grid-column: span 2 }
@@ -224,6 +227,13 @@ dialog.lb p { color: #E8EEE7; font: .85rem/1.4 var(--mono); text-align: center; 
       <div><dt>Crutch Lane</dt><dd><b>Dot the Sloth</b> walks beside him at exactly his pace. Neither of them is in a hurry. That is the whole point.</dd></div>
       <div><dt>Cargo Net</dt><dd><b>Trendy and Bendy Wendy</b> blows the whistle and yells "TEAMWORK IS NOT A PENALTY!" She is technically correct.</dd></div>
     </dl>
+    <figure class="clip">
+      <span class="exhibit">Now showing · Clip 1 · The Mud Pit</span>
+      <video controls playsinline preload="metadata" poster="mud-pit-poster.jpg" width="1920" height="1080">
+        <source src="mud-pit-clip-1.mp4" type="video/mp4">
+      </video>
+      <figcaption>Muscle Hero insists the mud pit is fine. The Translation Mice disagree. Eric taps one hoof. Kyle voices Muscle Hero.</figcaption>
+    </figure>
   </section>
 
   <section aria-labelledby="s2p">

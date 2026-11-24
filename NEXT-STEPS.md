@@ -17,3 +17,14 @@ Part 2, race day: 7 Start Line + 6-Foot Wall (Coach Madden) · 8 Barbed Wire Cra
 Use generic obstacle names; no race-brand names or logos.
 
 Chapter 4 idea: the sandbag is labeled THE BURDEN (narrative therapy: name it, set it outside yourself). He tries to carry it on forearm crutches; Foxy asks "Who decided you carry this alone?" and "What's in the bag?"; he names what's inside (I'M FINE, DON'T BOTHER ANYONE, PRIDE); the Mice translate; Eric silently takes one corner.
+
+# Kyle's writing-to-recover exercises (direction, Nov 24, 2026)
+
+Writing to recover (poetry, letters) has been at the core since day 1. Weave Kyle's own exercises into the chapters, starting at Chapter 4.
+
+- Format idea: each chapter ends with a short "Field Exercise" page styled like the Form SR-25 joke, but the exercise itself is sincere.
+- Ch 4 Sandbag Carry: a letter to The Burden ("Dear ___, here is what I've been carrying for you…").
+- Ch 5 Crutch Lane: Dot's "one true sentence a day. Short ones count."
+- Later chapters: a short poem; letters to the friends; Ch 20 ends with one true sentence to each character, filed in a folder labeled PROGRESS.
+- Use Kyle's real exercises, poems and letters. Ask him for them; don't invent personal ones.
+- Possible product: a companion "Field Workbook" with all 20 exercises.

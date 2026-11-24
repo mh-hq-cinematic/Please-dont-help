@@ -110,6 +110,9 @@ blockquote { margin: 0; padding-left: 1rem; border-left: 3px solid var(--ink); d
 .clip { margin: 0; display: grid; gap: .45rem }
 .clip video { width: 100%; height: auto; display: block; background: #000; border: 1px solid var(--rule); box-shadow: 5px 5px 0 var(--rule) }
 .clip figcaption { font: .78rem/1.4 var(--mono); color: var(--muted) }
+.soon { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .8rem }
+.soon > div { border: 2px dashed var(--rule); padding: .8rem 1rem; display: grid; gap: .3rem }
+.soon p { font-size: .92rem; color: var(--muted) }
 /* Photos */
 .photos { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem }
 .photos figure { margin: 0; display: grid; grid-template-rows: 1fr auto; gap: .3rem; min-width: 0; grid-column: span 2 }
@@ -228,12 +231,16 @@ dialog.lb p { color: #E8EEE7; font: .85rem/1.4 var(--mono); text-align: center; 
       <div><dt>Cargo Net</dt><dd><b>Trendy and Bendy Wendy</b> blows the whistle and yells "TEAMWORK IS NOT A PENALTY!" She is technically correct.</dd></div>
     </dl>
     <figure class="clip">
-      <span class="exhibit">Now showing · Clip 1 · The Mud Pit</span>
+      <span class="exhibit">Now showing · Chapter 1 · The Mud Pit</span>
       <video controls playsinline preload="metadata" poster="mud-pit-poster.jpg" width="1920" height="1080">
         <source src="mud-pit-clip-1.mp4" type="video/mp4">
       </video>
       <figcaption>Muscle Hero insists the mud pit is fine. The Translation Mice disagree. Eric taps one hoof. Kyle voices Muscle Hero.</figcaption>
     </figure>
+    <div class="soon">
+      <div><span class="exhibit">Chapter 2 · Monkey Bars</span><p>Starring Marigold, who counts every rung out loud. Coming soon.</p></div>
+      <div><span class="exhibit">Chapter 3 · Plank Station</span><p>Starring the Mice and their scorecards. Coming soon.</p></div>
+    </div>
     <figure class="clip">
       <span class="exhibit">Now showing · Chapter 4 · A Love Letter to a Sandbag</span>
       <video controls playsinline preload="metadata" poster="ch4-poster.jpg" width="1920" height="1080">

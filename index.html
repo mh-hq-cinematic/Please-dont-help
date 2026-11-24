@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A satirical obstacle-race book about Muscle Hero, a man on forearm crutches who would rather carry the sandbag alone, and the paper friends who refuse to let him.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Please “Don’t” Help · a Muscle Hero book by Kyle Keech">
+<meta property="og:description" content="Every obstacle needs a friend. Support the book, watch the Paper Hero Club, and help Kyle race for the IM ABLE Foundation.">
+<meta property="og:image" content="https://mh-hq-cinematic.github.io/please-dont-help/preview.png">
+<meta property="og:image:width" content="2400"><meta property="og:image:height" content="1260">
+<meta property="og:url" content="https://mh-hq-cinematic.github.io/please-dont-help/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://mh-hq-cinematic.github.io/please-dont-help/preview.png">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>Please “Don’t” Help</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo+Narrow:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
+<script src="qrcode.js"></script>
+<style>
+/* Layout: the page is a mock government form — "Form SR-25, Request for Support" — stacked in numbered sections down one column. */
+:root {
+  --paper: #E8EEE7;      /* form-paper green */
+  --sheet: #F5F8F3;
+  --ink: #1D2740;        /* official navy */
+  --muted: #5A6578;
+  --rule: #B9C4BB;
+  --stamp: #B4312B;      /* rubber-stamp red, used once per screen */
+  --venmo: #1F6FD1;
+  --display: "Archivo Black", "Arial Black", Impact, sans-serif;
+  --narrow: "Archivo Narrow", "Arial Narrow", Arial, sans-serif;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #121815; --sheet: #1A221E; --ink: #DCE4EE; --muted: #9AA6B6; --rule: #34423A; --stamp: #E0645C; --venmo: #6BA8F0; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #121815; --sheet: #1A221E; --ink: #DCE4EE; --muted: #9AA6B6; --rule: #34423A; --stamp: #E0645C; --venmo: #6BA8F0; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--paper); color: var(--ink); font: 16px/1.6 var(--body); }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 2rem 4rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 1.5rem }
+.formhead { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+  font: 600 .75rem/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  border-bottom: 2px solid var(--ink); padding-bottom: .5rem }
+section { background: var(--sheet); border: 1px solid var(--rule); padding: 1.5rem; display: grid; gap: 1rem; min-width: 0 }
+.label { font: 600 .72rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted) }
+h1, h2 { margin: 0; text-wrap: balance }
+h2 { font: 700 1.35rem/1.2 var(--narrow); }
+p { margin: 0; max-width: 62ch }
+
+/* Hero */
+.hero { display: grid; grid-template-columns: 200px 1fr; gap: 1.75rem; align-items: center; position: relative }
+@media (max-width: 560px) { .hero { grid-template-columns: 1fr } .cover { max-width: 220px } }
+.cover { aspect-ratio: 2/3; max-width: 100%; background: var(--ink); color: var(--sheet); padding: 1rem;
+  display: flex; flex-direction: column; justify-content: space-between; box-shadow: 6px 6px 0 var(--rule) }
+.cover .ct { font: 1.35rem/1.05 var(--display); text-transform: uppercase }
+.cover .cs { font: .72rem/1.35 var(--mono) }
+.cover .ca { font: 700 .85rem var(--narrow); letter-spacing: .12em; text-transform: uppercase; border-top: 1px solid currentColor; padding-top: .4rem }
+h1 { font: clamp(2rem, 6vw, 3.1rem)/1 var(--display); text-transform: uppercase; letter-spacing: -.01em }
+.sub { font: italic 1.1rem/1.45 var(--body); color: var(--muted) }
+.stamp { position: absolute; right: .5rem; top: -.6rem; transform: rotate(8deg);
+  border: 3px solid var(--stamp); color: var(--stamp); padding: .2rem .6rem;
+  font: .95rem/1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; opacity: .85; pointer-events: none }
+@media (max-width: 560px) { .stamp { top: .5rem } }
+
+/* Checkboxes (satire) */
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem }
+.checks li { display: grid; grid-template-columns: 1.4rem 1fr; gap: .6rem; align-items: start }
+.box { width: 1.1rem; height: 1.1rem; border: 2px solid var(--ink); margin-top: .25rem; display: grid; place-items: center; font: 700 .85rem/1 var(--mono); color: var(--stamp) }
+
+/* Support */
+.support { grid-template-columns: 1fr 220px; align-items: start }
+@media (max-width: 620px) { .support { grid-template-columns: 1fr } }
+.support > div { display: grid; gap: 1rem; min-width: 0 }
+.amounts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .6rem }
+.amt { display: grid; gap: .15rem; text-decoration: none; color: var(--ink); border: 2px solid var(--ink); padding: .7rem .8rem; background: transparent; transition: background .15s, color .15s }
+.amt:hover, .amt:focus-visible { background: var(--ink); color: var(--sheet); outline: none }
+.amt b { font: 1.4rem/1 var(--display); font-variant-numeric: tabular-nums }
+.amt span { font: .78rem/1.3 var(--mono) }
+.qr { display: grid; gap: .6rem; justify-items: center; text-align: center; border: 2px dashed var(--rule); padding: 1rem }
+.qr-img { background: #fff; padding: 10px; width: 180px; max-width: 100%; aspect-ratio: 1 }
+.qr-img img, .qr-img svg { width: 100%; height: 100%; display: block }
+.handle { font: 600 1rem var(--mono); color: var(--venmo); word-break: break-all }
+.btn { font: 600 .8rem var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--ink); background: transparent; border: 1px solid var(--ink); padding: .4rem .7rem; cursor: pointer }
+.btn:focus-visible { outline: 2px solid var(--venmo); outline-offset: 2px }
+.fine { font: .8rem/1.5 var(--mono); color: var(--muted) }
+
+/* Uses table */
+.uses { display: grid; grid-template-columns: max-content 1fr; gap: .4rem 1rem; font-variant-numeric: tabular-nums }
+.uses dt { font: 600 .9rem var(--mono) } .uses dd { margin: 0 }
+
+/* Excerpt */
+blockquote { margin: 0; padding-left: 1rem; border-left: 3px solid var(--ink); display: grid; gap: .8rem; font-size: 1.02rem }
+/* Art + course */
+.art { margin: 0; display: grid; gap: .4rem }
+.art img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); box-shadow: 5px 5px 0 var(--rule) }
+.art figcaption { font: .78rem/1.4 var(--mono); color: var(--muted) }
+.obstacles { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .9rem 1.2rem }
+.obstacles > div { border-top: 2px solid var(--ink); padding-top: .5rem; display: grid; gap: .25rem; min-width: 0 }
+.obstacles dt { font: .95rem/1.2 var(--display); text-transform: uppercase; letter-spacing: .02em }
+.obstacles dd { margin: 0; font-size: .93rem; line-height: 1.5 }
+.able { border: 2px solid var(--ink); padding: .9rem 1rem; display: grid; gap: .4rem }
+.able p { font-size: .93rem }
+.able-btn { justify-self: start; text-decoration: none; display: inline-block }
+.able-btn:hover { background: var(--ink); color: var(--sheet) }
+/* Photos */
+.photos { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem }
+.photos figure { margin: 0; display: grid; grid-template-rows: 1fr auto; gap: .3rem; min-width: 0; grid-column: span 2 }
+.photos .lead { grid-column: span 4; grid-row: span 2 }
+.photos .wide { grid-column: span 3 }
+.photos img { width: 100%; height: 100%; min-height: 0; object-fit: cover; display: block; border: 1px solid var(--rule) }
+.photos .lead img { box-shadow: 5px 5px 0 var(--rule) }
+.photos figcaption { font: .76rem/1.35 var(--mono); color: var(--muted) }
+@media (max-width: 560px) { .photos { grid-template-columns: 1fr 1fr } .photos figure, .photos .wide { grid-column: span 1 } .photos .lead { grid-column: span 2; grid-row: auto } }
+.zoom { cursor: zoom-in }
+.zoom:focus-visible { outline: 3px solid var(--venmo); outline-offset: 2px }
+.hint { font: .76rem/1.3 var(--mono); color: var(--muted) }
+dialog.lb { border: 0; padding: 0; background: transparent; max-width: 100vw; max-height: 100vh; width: 100vw; height: 100vh }
+dialog.lb::backdrop { background: rgba(10,14,20,.9) }
+dialog.lb[open] { display: grid; place-items: center; grid-template-rows: 1fr auto; gap: .6rem; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); box-sizing: border-box }
+dialog.lb img { max-width: 100%; max-height: calc(100vh - 7rem); object-fit: contain; display: block; min-height: 0 }
+dialog.lb p { color: #E8EEE7; font: .85rem/1.4 var(--mono); text-align: center; margin: 0; max-width: 60ch }
+.lb-close { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); font: 600 .85rem var(--mono); text-transform: uppercase; letter-spacing: .05em; color: #fff; background: rgba(0,0,0,.55); border: 1px solid #fff; padding: .5rem .8rem; cursor: pointer }
+/* Videos */
+.vids { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem }
+.vid { display: grid; gap: .35rem; text-decoration: none; color: var(--ink); min-width: 0 }
+.vid b { font: 700 1.05rem/1.25 var(--narrow) }
+.vid:hover b, .vid:focus-visible b { text-decoration: underline }
+.vid:focus-visible { outline: 2px solid var(--venmo); outline-offset: 3px }
+.exhibit { font: 600 .72rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--stamp) }
+.thumb { position: relative; display: block; aspect-ratio: 16/9; overflow: hidden; border: 1px solid var(--rule); box-shadow: 5px 5px 0 var(--rule); background: #000 }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block }
+.thumb .play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 3.4rem; height: 2.4rem }
+.thumb .play::after { left: 1.35rem; top: .75rem }
+/* Cast */
+.cast { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .9rem }
+.card { display: grid; grid-template-columns: 3rem 1fr; gap: .8rem; align-items: start; padding: .9rem; background: var(--paper); border: 1px solid var(--rule) }
+.card:nth-child(odd) { transform: rotate(-.6deg) } .card:nth-child(even) { transform: rotate(.5deg) }
+.card h3 { margin: 0 0 .2rem; font: 700 1.05rem/1.2 var(--narrow) }
+.card p { font-size: .92rem; line-height: 1.5; color: var(--ink) }
+.chip { width: 3rem; height: 3rem; border-radius: 50%; background: var(--c); color: #fff; display: grid; place-items: center;
+  font: .95rem/1 var(--display); box-shadow: 2px 3px 0 var(--ink); border: 2px solid var(--sheet) }
+.yt { display: flex; gap: .9rem; align-items: center; text-decoration: none; color: var(--ink); border: 2px solid var(--ink); padding: .8rem 1rem; transition: background .15s, color .15s }
+.yt:hover, .yt:focus-visible { background: var(--ink); color: var(--sheet); outline: none }
+.yt > span:last-child { display: grid; gap: .1rem; min-width: 0 }
+.yt b { font: 700 1.1rem var(--narrow) } .yt > span:last-child span { font: .8rem var(--mono); word-break: break-all }
+.play { flex: none; width: 2.6rem; height: 1.9rem; border-radius: 8px; background: var(--stamp); position: relative }
+.play::after { content: ""; position: absolute; left: 1.05rem; top: .55rem; border: .4rem solid transparent; border-left: .7rem solid #fff; border-right: 0 }
+.foot { font: .78rem/1.6 var(--mono); color: var(--muted); text-align: center }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="formhead"><span>Form SR-25 · Request for Support</span><span>Rev. 11/2026 · Page 1 of 1</span></div>
+
+  <section class="hero" aria-labelledby="t">
+    <div class="stamp" aria-hidden="true">Do Not Assist</div>
+    <div class="cover" aria-hidden="true">
+      <div class="cs">A self-reliance manual<br>starring Muscle Hero</div>
+      <div class="ct">Please “Don’t” Help</div>
+      <div class="ca" id="coverAuthor">Kyle Keech</div>
+    </div>
+    <div style="display:grid;gap:1rem;min-width:0">
+      <span class="label">Section 1 · The Book</span>
+      <h1 id="t">Please “Don’t” Help</h1>
+      <p class="sub">An obstacle-race comedy about a man on forearm crutches who would rather carry the sandbag alone, and the paper friends who refuse to let him.</p>
+      <p>A satirical e-book, currently being drafted. Muscle Hero trains for Spartan-style obstacle races and works hard at never asking anyone for anything. Chapters cover advanced techniques such as Pretending You Meant To Do It That Way, The Fourteen-Trip Grocery Haul, and How To Reply "I'm good!" While Hanging From the Monkey Bars.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="s2">
+    <span class="label">Section 2 · Eligibility</span>
+    <h2 id="s2">Check all that apply to you</h2>
+    <ul class="checks">
+      <li><span class="box">✓</span><span>I have rehearsed asking a question so many times that I no longer need the answer.</span></li>
+      <li><span class="box">✓</span><span>I have said "no worries!" while having several worries.</span></li>
+      <li><span class="box">✓</span><span>I would rather read a 40-page manual than ask the person standing next to me.</span></li>
+      <li><span class="box">✓</span><span>I have done 30 burpees as a penalty rather than ask a volunteer how the obstacle works.</span></li>
+      <li><span class="box"></span><span>I have never done any of the above. <em>(Please return this form. It is not for you.)</em></span></li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="s2a">
+    <span class="label">Section 2-A · Persons of Interest</span>
+    <h2 id="s2a">The cast, cut from paper</h2>
+    <p>In narrative therapy, the person is not the problem. The problem is the problem. So the author cut his fears, habits and hang-ups out of paper, gave them names, and let them argue with him in public. It is much easier to laugh at a fear when it is wearing a cardigan.</p>
+    <figure class="art">
+      <img src="mh-marigold.jpg" alt="Muscle Hero, a muscular paper-cutout hero with a smiley stick-figure face, red headband, red cape, MH badge and forearm crutches, standing beside Marigold, who wears an orange petal dress and holds a marigold." width="1600" height="900">
+      <figcaption>Muscle Hero and Marigold. Art from the Paper Hero Club.</figcaption>
+    </figure>
+    <div class="cast">
+      <article class="card"><div class="chip" style="--c:#C8372D">MH</div><div><h3>Muscle Hero</h3><p>The author, on forearm crutches, in a cape. Puts up walls when he's scared to show his heart. Undefeated at planking, in his head.</p></div></article>
+      <article class="card"><div class="chip" style="--c:#D9772B">FF</div><div><h3>Foxy Fax</h3><p>The therapist. Narrator. Asks the question you were hoping nobody would ask.</p></div></article>
+      <article class="card"><div class="chip" style="--c:#1F8A86">EB</div><div><h3>Eric the Bull</h3><p>Best friend, male nurse, punching bag. The one whose approval Muscle Hero keeps waiting for. Shows respect with one hoof tap.</p></div></article>
+      <article class="card"><div class="chip" style="--c:#E0A526">M</div><div><h3>Marigold</h3><p>Special education teacher. Finds the whole world fascinating, including him.</p></div></article>
+      <article class="card"><div class="chip" style="--c:#6FA58A">DS</div><div><h3>Dot the Sloth</h3><p>Head recovery coach. Never hurries. Prescribes "one true sentence a day. Short ones count."</p></div></article>
+      <article class="card"><div class="chip" style="--c:#7A7F8C">TM</div><div><h3>The Translation Mice</h3><p>Hold up cards that say what Muscle Hero meant when the words came out wrong.</p></div></article>
+    </div>
+    <a class="yt" href="https://www.youtube.com/@paperheroclubkp" target="_blank" rel="noopener">
+      <span class="play" aria-hidden="true"></span>
+      <span><b>Watch them on Paper Hero Club</b><span>youtube.com/@paperheroclubkp · paper-cutout episodes</span></span>
+    </a>
+  </section>
+
+  <section aria-labelledby="s2b">
+    <span class="label">Section 2-B · Course Map</span>
+    <h2 id="s2b">Every obstacle needs a friend</h2>
+    <p>Muscle Hero can plank, crawl and grip with the best of them. The hard part comes at each obstacle, where someone offers to help. The book follows him from the backyard training course to race day, one obstacle and one accepted hand at a time.</p>
+    <figure class="art">
+      <img src="backyard-course.jpg" alt="The Backyard Course: a paper-cutout backyard with a Backyard Gauntlet arch, a mud pit, a plank station judged by three mice holding score cards of 10, monkey bars made from an old swing set, a cargo net, a tire run and Crutch Lane. Muscle Hero waves at the bars, Eric the Bull stands by the net, Marigold waves from the porch and Wendy blows a whistle." width="1600" height="900" loading="lazy">
+      <figcaption>The Backyard Course, where Muscle Hero trains between races.</figcaption>
+    </figure>
+    <dl class="obstacles">
+      <div><dt>Mud Pit</dt><dd><b>Eric the Bull</b> hauls him out by the cape and says nothing. One hoof tap. Muscle Hero thinks about it for three chapters.</dd></div>
+      <div><dt>Monkey Bars</dt><dd><b>Marigold</b> counts every rung out loud like it is the most amazing thing she has ever seen. He makes it two rungs further than usual.</dd></div>
+      <div><dt>Plank Station</dt><dd><b>The Mice</b> hold up scorecards. All tens. He asks for a recount.</dd></div>
+      <div><dt>Sandbag Carry</dt><dd><b>Foxy Fax</b> asks one question: "Who decided you carry this alone?" He has no answer, and sets the bag down to think.</dd></div>
+      <div><dt>Crutch Lane</dt><dd><b>Dot the Sloth</b> walks beside him at exactly his pace. Neither of them is in a hurry. That is the whole point.</dd></div>
+      <div><dt>Cargo Net</dt><dd><b>Trendy and Bendy Wendy</b> blows the whistle and yells "TEAMWORK IS NOT A PENALTY!" She is technically correct.</dd></div>
+    </dl>
+  </section>
+
+  <section aria-labelledby="s2p">
+    <span class="label">Section 2-C · Field Photos · Not Paper</span>
+    <h2 id="s2p">The real course</h2>
+    <p>Muscle Hero is made of cardstock. The races are not. These are from real obstacle race weekends, bib 22581, where Kyle competes and raises money for the IM ABLE Foundation.</p>
+    <span class="hint">Tap any photo or drawing to see it full size.</span>
+    <div class="photos">
+      <figure class="lead"><img src="race-laugh.jpg" alt="Kyle in his wheelchair in front of a race banner, laughing, wearing a race headband with bib 22581 and a No Excuses Just Move shirt." width="750" height="1000"><figcaption>Race day. Bib 22581.</figcaption></figure>
+      <figure><img src="race-thumbs.jpg" alt="Kyle giving a thumbs-up from his wheelchair on the grass beside the race fence." width="750" height="1000" loading="lazy"><figcaption>Thumbs up. Translation: actually good.</figcaption></figure>
+      <figure><img src="race-start.jpg" alt="A crowd of racers gathered at a start line at the base of a ski mountain, with the slopes disappearing into fog." width="750" height="1000" loading="lazy"><figcaption>The start line, somewhere under the fog.</figcaption></figure>
+      <figure class="wide"><img src="race-imable.jpg" alt="The IM ABLE Foundation flag flying beside a water station tent at the race." width="750" height="1000" loading="lazy"><figcaption>The IM ABLE Foundation tent.</figcaption></figure>
+      <figure class="wide"><img src="race-tent.jpg" alt="Kyle in his wheelchair outside the festival tents, wearing a No Excuses Just Move shirt." width="750" height="1000" loading="lazy"><figcaption>No excuses. Just move.</figcaption></figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="s2c">
+    <span class="label">Section 2-D · Supporting Evidence</span>
+    <h2 id="s2c">Exhibits A and B: the author practices asking</h2>
+    <p>Two short videos from the Paper Hero Club. In one, Kyle follows his therapist's advice and asks for help, out loud, on camera. In the other, Muscle Hero applies for a job he very much wants.</p>
+    <div class="vids">
+      <a class="vid" href="https://www.youtube.com/watch?v=TM-XHxtmHM4" target="_blank" rel="noopener">
+        <span class="thumb"><img src="yt-TM-XHxtmHM4.jpg" alt="Kyle talking to the camera, caption reads: So this is me practicing. On you." width="480" height="360" loading="lazy"><span class="play" aria-hidden="true"></span></span>
+        <span class="exhibit">Exhibit A · Short</span>
+        <b>My Therapist Said "Ask for Help"… So I Asked Gary Vee</b>
+      </a>
+      <a class="vid" href="https://www.youtube.com/watch?v=Ar8MNZmkopo" target="_blank" rel="noopener">
+        <span class="thumb"><img src="yt-Ar8MNZmkopo.jpg" alt="Muscle Hero on forearm crutches in Muscle Hero's Home Gym, beside a squat rack and punching bag." width="480" height="360" loading="lazy"><span class="play" aria-hidden="true"></span></span>
+        <span class="exhibit">Exhibit B · Episode 1</span>
+        <b>I Applied to Be Lead Spartan Trainer… as a Cartoon</b>
+      </a>
+    </div>
+  </section>
+
+  <section class="support" aria-labelledby="s3">
+    <div>
+      <span class="label">Section 3 · Support the Author</span>
+      <h2 id="s3">Help that doesn't require anyone to ask</h2>
+      <p>The author has spent years perfecting the art of not asking for help. This page does the asking instead, which is both the joke and the plan. If the book made you laugh, or you just want to see it finished, you can chip in on Venmo.</p>
+      <div class="amounts">
+        <a class="amt" data-amt="3" target="_blank" rel="noopener"><b>$3</b><span>One coffee, drunk alone</span></a>
+        <a class="amt" data-amt="10" target="_blank" rel="noopener"><b>$10</b><span>Funds one chapter of avoidance</span></a>
+        <a class="amt" data-amt="25" target="_blank" rel="noopener"><b>$25</b><span>Patron of Quiet Endurance</span></a>
+        <a class="amt" data-amt="" target="_blank" rel="noopener"><b>Any</b><span>You pick. No follow-up questions.</span></a>
+      </div>
+      <p class="fine">Payments go straight to Kyle's Venmo and cover operating and competition costs (see Section 4). This page never sees or stores card details.</p>
+      <div class="able">
+        <span class="label">Off the page, on the course</span>
+        <p>In real life, Kyle races obstacle courses on forearm crutches and uses those races to raise money for the IM ABLE Foundation, where he serves on the fundraising committee. The foundation helps people with disabilities stay active.</p>
+        <a class="btn able-btn" href="https://imablefoundation.org/donate/" target="_blank" rel="noopener">Donate to IM ABLE &rarr;</a>
+        <span class="fine">Opens the IM ABLE Foundation's own donation page. Those gifts go to the foundation, not to the book.</span>
+      </div>
+    </div>
+    <div class="qr" aria-labelledby="qrcap">
+      <div class="qr-img" id="qr" role="img" aria-label="QR code that opens the author's Venmo page"></div>
+      <div id="qrcap" class="label">Scan with your phone camera</div>
+      <div class="handle" id="handle"></div>
+      <button class="btn" id="copy" type="button">Copy Venmo link</button>
+      <span class="fine" id="copyMsg" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section aria-labelledby="s4">
+    <span class="label">Section 4 · Allocation of Funds</span>
+    <h2 id="s4">Where your support goes</h2>
+    <dl class="uses">
+      <dt>Operating costs</dt><dd>The tools that keep Muscle Hero running: the Claude subscription that helps write, draw and build this page, plus software, hosting and payment fees.</dd>
+      <dt>Race costs</dt><dd>Competition funding: obstacle race entry fees, travel to race weekends, and adaptive gear that survives the mud.</dd>
+      <dt>The book</dt><dd>Editing and a real cover to replace the navy rectangle above. The editor will be asked for help through a strictly formal contract.</dd>
+    </dl>
+  </section>
+
+  <section aria-labelledby="s5">
+    <span class="label">Section 5 · Sample Excerpt · Draft</span>
+    <h2 id="s5">From Chapter 3: "I'm Good!"</h2>
+    <blockquote>
+      <p>The phrase "I'm good!" is the Swiss Army knife of the self-reliant. It works when you are good. It works better when you are not. Spoken with the right brightness, it can end a conversation, deflect a casserole, and turn away a neighbor holding the exact ladder you need.</p>
+      <p>Muscle Hero says it eleven times a day. Each time, a small gray mouse in the corner holds up a card: <strong>TRANSLATION: NOT GOOD.</strong> Foxy Fax writes this down. Dot the Sloth begins a thumbs-up that will finish sometime Thursday. Eric taps one hoof, and Muscle Hero spends the rest of the afternoon wondering what it meant.</p>
+      <p>Advanced practitioners add their own thumbs-up. Masters do it while holding a dresser on one knee. If anyone offers to take the other end, refer to Chapter 7: <em>Saying "I've got it" Through Gritted Teeth.</em></p>
+    </blockquote>
+  </section>
+
+  <p class="foot">Form SR-25 is not a real government form. No help was requested in the making of this page.<br>© 2026 Kyle Keech</p>
+</div>
+
+<script>
+/* ---- EDIT THESE ---- */
+const VENMO_USERNAME = "Kyle-Keech-3";   // without the @
+const AUTHOR_NAME = "Kyle Keech";
+const NOTE = "Please “Don’t” Help";           // memo pre-filled in Venmo
+/* -------------------- */
+
+const profile = "https://venmo.com/u/" + encodeURIComponent(VENMO_USERNAME);
+document.getElementById("handle").textContent = "@" + VENMO_USERNAME;
+document.getElementById("coverAuthor").textContent = AUTHOR_NAME;
+
+document.querySelectorAll(".amt").forEach(a => {
+  const amt = a.dataset.amt;
+  a.href = amt
+    ? "https://venmo.com/" + encodeURIComponent(VENMO_USERNAME) + "?txn=pay&amount=" + amt + "&note=" + encodeURIComponent(NOTE)
+    : profile;
+});
+
+try {
+  const q = qrcode(0, "M"); q.addData(profile); q.make();
+  document.getElementById("qr").innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+} catch (e) {
+  document.getElementById("qr").textContent = profile;
+}
+
+document.getElementById("copy").addEventListener("click", () => {
+  const msg = document.getElementById("copyMsg");
+  navigator.clipboard.writeText(profile)
+    .then(() => { msg.textContent = "Link copied."; })
+    .catch(() => { msg.textContent = profile; });
+});
+</script>
+
+<dialog class="lb" id="lb" aria-label="Enlarged image">
+  <button class="lb-close" id="lbClose" type="button">Close</button>
+  <img id="lbImg" alt="">
+  <p id="lbCap"></p>
+</dialog>
+<script>
+(function(){
+  const lb=document.getElementById("lb"), im=document.getElementById("lbImg"), cap=document.getElementById("lbCap");
+  document.querySelectorAll(".photos img, .art img").forEach(img=>{
+    img.classList.add("zoom"); img.tabIndex=0; img.setAttribute("role","button");
+    const open=()=>{ im.src=img.src; im.alt=img.alt; const fc=img.closest("figure")?.querySelector("figcaption"); cap.textContent=fc?fc.textContent:""; try{lb.showModal()}catch(e){lb.setAttribute("open","")} };
+    img.addEventListener("click",open);
+    img.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();open()} });
+  });
+  const close=()=>{ try{lb.close()}catch(e){lb.removeAttribute("open")} };
+  document.getElementById("lbClose").addEventListener("click",close);
+  lb.addEventListener("click",e=>{ if(e.target===lb) close() });
+})();
+</script>
+
+</body>
+</html>

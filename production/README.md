@@ -18,3 +18,8 @@ Voice line start times in the final mix: 6.0, 17.5, 24.0, 40.5, 54.0, 62.6 secon
 
 ## link-preview
 `social-card.html` renders the 1200x630 share image (`/preview.png` at the site root, made at 2x).
+
+## ch4-sandbag
+"Every Obstacle Needs a Friend, Chapter 4: A Love Letter to a Sandbag" (1:41). Kyle voices Muscle Hero; Kyle's therapist voices Foxy Fax (recorded together Nov 24, 2026).
+Line files `Ch4 Line N - <Speaker> - <Title>.m4a`. Line 17 (Foxy: "Obstacle one. The mud pit. Let's see if he asks.") is a pickup for the Mud Pit clip and is not used in Chapter 4.
+Voice start times: 3.2, 7.1, 15.4, 19.4, 28.6, 32.0, 36.7, 39.4, 54.4, 57.7, 65.4, 68.2, 76.3, 87.8, 92.8, 94.2 s.

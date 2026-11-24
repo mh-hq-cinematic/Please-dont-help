@@ -1,0 +1,361 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}svg{display:block}</style></head>
+<body><div id="stage"></div>
+<script>
+const W=1280,H=720, END=101;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const seg=(t,a,b)=>clamp((t-a)/(b-a),0,1);
+const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+const lerp=(a,b,u)=>a+(b-a)*u;
+const PIT={x:660,y:615,rx:240,ry:66};
+const LINES=[
+ [3.2,3.5,"Obstacle four. The sandbag carry.","F"],
+ [7.1,7.9,"It's just a bag. I carry things. It's kind of my whole thing.","M"],
+ [15.4,3.6,"You're carrying it on crutches. While chasing someone.","F"],
+ [19.4,6.1,"I'm not chasing. I am… following quickly.","M"],
+ [28.6,2.91,"Who decided you carry this alone?","F"],
+ [32.0,4.3,"I don't remember signing anything.","M"],
+ [36.7,2.33,"What's actually in the bag?","F"],
+ [39.4,10.6,"“I'm fine.” “Don't bother anyone.” And… a few people I keep running after.","M"],
+ [54.4,2.93,"What would it look like to let it rest?","F"],
+ [57.7,7.3,"Sitting down. On the bag. That's a start, right?","M"],
+ [65.4,2.37,"That's a start. Write a letter.","F"],
+ [68.2,7.7,"A love letter. To a sandbag? Totally normal.","M"],
+ [76.3,7.9,"Dear sandbag. You're getting heavy. I think I should put you down.","M"],
+ [87.8,4.8,"Turns out it's lighter with two. Who knew?","M"],
+ [92.8,0.99,"I knew.","F"],
+ [94.2,4.4,"Foxy knew. Do it the Muscle Hero way!","M"],
+];
+
+const DEFS=`<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86c6ea"/><stop offset="1" stop-color="#d4ecf8"/></linearGradient>
+<linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86c96f"/><stop offset="1" stop-color="#5a9e4b"/></linearGradient>
+<linearGradient id="skin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f5cfa6"/><stop offset=".55" stop-color="#e2aa7a"/><stop offset="1" stop-color="#b8784a"/></linearGradient>
+<linearGradient id="skinD" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9a679"/><stop offset="1" stop-color="#9c6238"/></linearGradient>
+<linearGradient id="cape" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d63a2f"/><stop offset="1" stop-color="#8f1d17"/></linearGradient>
+<linearGradient id="shorts" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a7bf0"/><stop offset="1" stop-color="#1d4fb8"/></linearGradient>
+<linearGradient id="teal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2bb3a8"/><stop offset="1" stop-color="#16756f"/></linearGradient>
+<linearGradient id="tealD" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1f8d85"/><stop offset="1" stop-color="#0f5651"/></linearGradient>
+<linearGradient id="bull" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a8703f"/><stop offset="1" stop-color="#6e4422"/></linearGradient>
+<linearGradient id="fox" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f29a45"/><stop offset="1" stop-color="#c8651e"/></linearGradient>
+<linearGradient id="mouse" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c4c8cf"/><stop offset="1" stop-color="#8b9099"/></linearGradient>
+<radialGradient id="mud" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#8a5a33"/><stop offset="1" stop-color="#5a3519"/></radialGradient>
+<linearGradient id="steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c9ced6"/><stop offset="1" stop-color="#7f8793"/></linearGradient>
+<radialGradient id="glow"><stop offset="0" stop-color="#fff3a8" stop-opacity=".95"/><stop offset="1" stop-color="#fff3a8" stop-opacity="0"/></radialGradient>
+<filter id="card" x="-25%" y="-25%" width="150%" height="150%">
+ <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="d"/>
+ <feOffset in="d" dx="2.5" dy="3" result="o"/>
+ <feFlood flood-color="#3b2a1e" flood-opacity=".6"/><feComposite in2="o" operator="in" result="edge"/>
+ <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="b"/><feOffset in="b" dx="7" dy="10" result="bo"/>
+ <feFlood flood-color="#000" flood-opacity=".22"/><feComposite in2="bo" operator="in" result="shadow"/>
+ <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4" result="n"/>
+ <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .12 0" result="na"/>
+ <feComposite in="na" in2="SourceAlpha" operator="in" result="grain"/>
+ <feMerge><feMergeNode in="shadow"/><feMergeNode in="edge"/><feMergeNode in="SourceGraphic"/><feMergeNode in="grain"/></feMerge>
+</filter>
+<clipPath id="mudline"><rect x="-2000" y="-2000" width="4000" height="${2000+PIT.y-8}"/></clipPath>
+<clipPath id="faceclip"><circle cx="0" cy="0" r="40"/></clipPath>
+</defs>`;
+
+const S='stroke="#00000030" stroke-width="1.5"';
+
+function bubble(x,y,w,h,text,tailX,tailY,size=26){
+  return `<g filter="url(#card)"><path d="M${x+18},${y} h${w-36} q18,0 18,18 v${h-36} q0,18 -18,18 H${Math.min(x+w-30,Math.max(x+30,tailX+24))} L${tailX},${tailY} L${Math.min(x+w-50,Math.max(x+20,tailX+4))},${y+h} H${x+18} q-18,0 -18,-18 v${-(h-36)} q0,-18 18,-18z" fill="#fff" stroke="#1d2740" stroke-width="3"/></g>
+  <text x="${x+w/2}" y="${y+h/2+size*0.36}" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-weight="700" font-size="${size}" fill="#1d2740">${text}</text>`;
+}
+
+function muscleHero(o){
+  const ph=o.walk??0, walking=o.walking?1:0;
+  const legA=Math.sin(ph)*14*walking;
+  const crA=Math.sin(ph+Math.PI/2)*22*walking;
+  const flut=Math.sin(o.t*7)*6;
+  const bob=walking?Math.abs(Math.sin(ph))*-5:0;
+  let g=`<g transform="translate(0,${bob})">`;
+  // cape
+  g+=`<path d="M-55,-212 L55,-212 L${88+flut},-48 Q0,${-32+flut/2} ${-88+flut},-48 Z" fill="url(#cape)" ${S}/>`;
+  // far leg (viewer left, darker)
+  const leg=(hx,a,fill)=>`<g transform="rotate(${a},${hx},-112)"><rect x="${hx-14}" y="-114" width="28" height="104" rx="13" fill="${fill}" ${S}/><ellipse cx="${hx}" cy="-60" rx="12" ry="18" fill="#ffffff22"/><rect x="${hx-19}" y="-14" width="40" height="15" rx="7" fill="#f0f0f0" stroke="#555" stroke-width="2"/></g>`;
+  g+=leg(-17,legA,'url(#skinD)');
+  g+=leg(17,-legA,'url(#skin)');
+  if(o.muddy) g+=`<path d="M-36,-70 Q-20,-52 -8,-66 Q4,-48 18,-62 Q30,-50 38,-68 L38,0 L-36,0Z" fill="#5a3519" opacity=".75"/><circle cx="-10" cy="-78" r="4" fill="#5a3519"/><circle cx="22" cy="-84" r="3" fill="#5a3519"/>`;
+  // shorts
+  g+=`<path d="M-42,-142 H42 L46,-92 H6 L0,-108 L-6,-92 H-46Z" fill="url(#shorts)" ${S}/>`;
+  if(o.muddy) g+=`<path d="M-46,-100 Q-30,-112 -14,-98 Q0,-110 14,-98 Q30,-112 46,-100 L46,-92 H-46Z" fill="#5a3519" opacity=".7"/>`;
+  // torso
+  g+=`<path d="M-64,-216 Q-74,-186 -40,-134 L40,-134 Q74,-186 64,-216 Q0,-230 -64,-216Z" fill="url(#skin)" ${S}/>`;
+  g+=`<ellipse cx="-24" cy="-198" rx="24" ry="13" fill="#ffffff26"/><ellipse cx="24" cy="-198" rx="24" ry="13" fill="#00000014"/>`;
+  for(let r=0;r<3;r++)for(let c=0;c<2;c++) g+=`<rect x="${c?3:-21}" y="${-178+r*15}" width="18" height="12" rx="6" fill="#00000012" stroke="#00000022"/>`;
+  g+=`<circle cx="0" cy="-196" r="13" fill="#f2b705" stroke="#1d2740" stroke-width="2.5"/><text x="0" y="-191.5" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="11" fill="#1d2740">MH</text>`;
+  // crutches + arms
+  const arm=(side,ang,fill,tattoo)=>{
+    const sx=side*60;
+    return `<g transform="rotate(${ang},${sx},-206)">
+      <circle cx="${sx}" cy="-206" r="23" fill="${fill}" ${S}/>
+      <rect x="${sx-16}" y="-206" width="32" height="58" rx="15" fill="${fill}" ${S}/>
+      ${tattoo?`<path d="M${sx},-168 l-7,-7 a4.5,4.5 0 0 1 7,-6 a4.5,4.5 0 0 1 7,6z" fill="#d62c2c"/>`:''}
+      <rect x="${sx-12}" y="-154" width="24" height="50" rx="11" fill="${fill}" ${S}/>
+      <circle cx="${sx}" cy="-100" r="12" fill="${fill}" ${S}/></g>`;
+  };
+  const crutch=(side,tipX,tipY=0,holdX=side*66,holdY=-104)=>{
+    const cx=holdX, cy=holdY-44;
+    return `<g><line x1="${cx}" y1="${cy}" x2="${tipX}" y2="${tipY}" stroke="url(#steel)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M${cx-11},${cy-4} q11,-10 22,0" fill="none" stroke="#6b7380" stroke-width="5" stroke-linecap="round"/>
+      <line x1="${holdX-8}" y1="${holdY}" x2="${holdX+8}" y2="${holdY}" stroke="#3a3f47" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="${tipX}" cy="${tipY}" r="5" fill="#222"/></g>`;
+  };
+  const leftTip=-78+crA, rightTip=78-crA;
+  // far crutch & arm
+  g+=crutch(-1,leftTip);
+  g+=arm(-1,6,'url(#skinD)',false);
+  if(o.armUp>0){
+    // right crutch left stuck upright in mud next to him
+    g+=crutch(1,92,0,92,-110);
+    g+=arm(1,lerp(-6,-150,o.armUp),'url(#skin)',true);
+    if(o.armUp>.8) g+=`<g transform="rotate(-150,60,-206)"><path d="M60,-90 v-18" stroke="#e2aa7a" stroke-width="9" stroke-linecap="round"/></g>`;
+  } else {
+    g+=crutch(1,rightTip);
+    g+=arm(1,-6,'url(#skin)',true);
+  }
+  // head
+  g+=`<g transform="translate(0,-268)">
+    <rect x="-14" y="22" width="28" height="22" fill="url(#skin)"/>
+    <circle r="43" fill="#1d2740"/>
+    <image href="face.png" x="-41" y="-41" width="82" height="82"/>
+    <path d="M-38,-26 Q0,-44 38,-26 L40,-15 Q0,-33 -40,-15Z" fill="#d62c2c" stroke="#8f1d17" stroke-width="1.5"/>
+    <path d="M37,-22 q${22},${-6+flut} ${44},${4+flut}" stroke="#d62c2c" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <path d="M37,-18 q${18},${4+flut} ${36},${16-flut}" stroke="#c22420" stroke-width="8" fill="none" stroke-linecap="round"/>
+  </g>`;
+  return g+'</g>';
+}
+
+function eric(o){
+  const ph=o.walk??0, w=o.walking?1:0, legA=Math.sin(ph)*12*w;
+  const lift=o.tap?-12*Math.sin(Math.PI*o.tap):0;
+  let g='';
+  const leg=(hx,a,fill,dy=0)=>`<g transform="rotate(${a},${hx},-118) translate(0,${dy})"><rect x="${hx-16}" y="-120" width="32" height="112" rx="10" fill="${fill}" ${S}/><path d="M${hx-18},-12 h36 v12 h-36z M${hx},-12 v12" fill="#3b2414" stroke="#1d120a" stroke-width="2"/></g>`;
+  g+=leg(-20,legA,'url(#tealD)');
+  g+=leg(20,-legA,'url(#teal)',lift);
+  g+=`<rect x="-58" y="-250" width="116" height="140" rx="22" fill="url(#teal)" ${S}/>`;
+  g+=`<path d="M-20,-250 L0,-222 L20,-250" fill="none" stroke="#0f5651" stroke-width="4"/>`;
+  g+=`<circle cx="0" cy="-168" r="36" fill="#d62c2c" stroke="#8f1d17" stroke-width="3"/><path d="M-26,-168 h52 M0,-194 v52" stroke="#8f1d17" stroke-width="2" stroke-dasharray="5 4"/>`;
+  g+=`<path d="M-30,-248 Q-36,-200 -10,-196 Q4,-196 6,-210" fill="none" stroke="#8a929c" stroke-width="4"/><circle cx="6" cy="-212" r="6" fill="#c9ced6" stroke="#6b7380" stroke-width="2"/>`;
+  const p=o.pull||0;
+  if(p>0){
+    const ang=lerp(0,-70,ease(Math.min(1,p*1.6)));
+    g+=`<g transform="rotate(${ang},-50,-228)"><rect x="-64" y="-236" width="28" height="${lerp(70,150,Math.min(1,p*1.6))}" rx="13" fill="url(#teal)" ${S}/><circle cx="-50" cy="${-236+lerp(76,156,Math.min(1,p*1.6))}" r="22" fill="#d62c2c" stroke="#8f1d17" stroke-width="3"/></g>`;
+    g+=`<rect x="20" y="-232" width="26" height="80" rx="12" fill="url(#tealD)" ${S}/><circle cx="33" cy="-150" r="21" fill="#b52222" stroke="#8f1d17" stroke-width="3"/>`;
+  } else {
+    g+=`<rect x="-62" y="-214" width="124" height="28" rx="14" fill="url(#tealD)" ${S}/><rect x="-62" y="-200" width="124" height="28" rx="14" fill="url(#teal)" ${S}/>`;
+    g+=`<circle cx="-54" cy="-200" r="22" fill="#d62c2c" stroke="#8f1d17" stroke-width="3"/><circle cx="54" cy="-200" r="22" fill="#b52222" stroke="#8f1d17" stroke-width="3"/>`;
+  }
+  g+=`<g transform="translate(0,-292)">
+    <path d="M-34,-24 Q-74,-36 -70,-70 Q-58,-44 -30,-38Z" fill="#f4efe4" stroke="#9c8f78" stroke-width="2"/>
+    <path d="M34,-24 Q74,-36 70,-70 Q58,-44 30,-38Z" fill="#f4efe4" stroke="#9c8f78" stroke-width="2"/>
+    <ellipse cx="-44" cy="-10" rx="14" ry="8" fill="#8a5a33"/><ellipse cx="44" cy="-10" rx="14" ry="8" fill="#6e4422"/>
+    <ellipse rx="40" ry="44" fill="url(#bull)" ${S}/>
+    <ellipse cx="0" cy="22" rx="27" ry="19" fill="#e9c8a0" stroke="#00000030"/>
+    <ellipse cx="-9" cy="23" rx="4" ry="5" fill="#3b2414"/><ellipse cx="9" cy="23" rx="4" ry="5" fill="#3b2414"/>
+    <circle cx="-14" cy="-10" r="5" fill="#1d120a"/><circle cx="14" cy="-10" r="5" fill="#1d120a"/>
+    <path d="M-24,-22 l14,4 M24,-22 l-14,4" stroke="#1d120a" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="0" cy="38" r="5" fill="none" stroke="#c9a227" stroke-width="3"/>
+  </g>`;
+  return g;
+}
+
+function foxy(){
+  return `<g transform="translate(150,720)" filter="url(#card)">
+   <path d="M-70,0 Q-70,-80 0,-86 Q70,-80 70,0Z" fill="#6c4a9e" ${S}/>
+   <rect x="-12" y="-74" width="24" height="60" fill="#fff" opacity=".8"/>
+   <g transform="translate(0,-130)">
+     <path d="M-40,-20 L-50,-82 L-12,-40Z M40,-20 L50,-82 L12,-40Z" fill="url(#fox)" ${S}/>
+     <path d="M-38,-30 L-44,-66 L-20,-40Z M38,-30 L44,-66 L20,-40Z" fill="#3b2414"/>
+     <ellipse rx="48" ry="44" fill="url(#fox)" ${S}/>
+     <path d="M-46,4 Q-24,36 0,44 Q24,36 46,4 Q20,18 0,16 Q-20,18 -46,4Z" fill="#fff8ee"/>
+     <circle cx="-17" cy="-6" r="12" fill="none" stroke="#1d2740" stroke-width="3"/><circle cx="17" cy="-6" r="12" fill="none" stroke="#1d2740" stroke-width="3"/><path d="M-5,-6 h10" stroke="#1d2740" stroke-width="3"/>
+     <circle cx="-17" cy="-6" r="4" fill="#1d120a"/><circle cx="17" cy="-6" r="4" fill="#1d120a"/>
+     <ellipse cx="0" cy="18" rx="7" ry="5" fill="#1d120a"/>
+   </g>
+   <rect x="34" y="-64" width="44" height="58" rx="4" fill="#c8a06a" stroke="#6b4a24" stroke-width="2"/><rect x="40" y="-56" width="32" height="44" fill="#fff"/>
+  </g>`;
+}
+
+function mouse(x,y,s,l1,l2){
+  return `<g transform="translate(${x},${y}) scale(${s})">
+   <g filter="url(#card)">
+    <rect x="-150" y="-250" width="300" height="104" rx="8" fill="#fffdf6" stroke="#1d2740" stroke-width="4"/>
+    <path d="M-34,-148 L-40,-96 M34,-148 L40,-96" stroke="#c9a06a" stroke-width="7"/>
+    <path d="M40,-20 Q90,0 80,-50" fill="none" stroke="#e7a5b0" stroke-width="5"/>
+    <ellipse cx="0" cy="-40" rx="38" ry="44" fill="url(#mouse)" ${S}/>
+    <circle cx="-30" cy="-112" r="20" fill="url(#mouse)" ${S}/><circle cx="-30" cy="-112" r="11" fill="#f0b4c0"/>
+    <circle cx="30" cy="-112" r="20" fill="url(#mouse)" ${S}/><circle cx="30" cy="-112" r="11" fill="#f0b4c0"/>
+    <ellipse cx="0" cy="-88" rx="32" ry="28" fill="url(#mouse)" ${S}/>
+    <circle cx="-11" cy="-92" r="4.5" fill="#1d120a"/><circle cx="11" cy="-92" r="4.5" fill="#1d120a"/><circle cx="0" cy="-74" r="5" fill="#e07a8c"/>
+    <circle cx="-40" cy="-100" r="9" fill="url(#mouse)"/><circle cx="40" cy="-100" r="9" fill="url(#mouse)"/>
+   </g>
+   <text x="0" y="-${l2?212:190}" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="17" fill="#6b7380" letter-spacing="3">TRANSLATION:</text>
+   <text x="0" y="-${l2?184:160}" text-anchor="middle" font-family="DejaVu Sans" font-weight="800" font-size="${l2?24:32}" fill="#c22420">${l1}</text>
+   ${l2?`<text x="0" y="-157" text-anchor="middle" font-family="DejaVu Sans" font-weight="800" font-size="24" fill="#c22420">${l2}</text>`:''}
+  </g>`;
+}
+
+function marigold(t){
+  const wave=Math.sin(t*5)*25;
+  return `<g transform="translate(120,488) scale(.5)" filter="url(#card)">
+   <path d="M-40,-150 Q-48,-60 -46,-80 L46,-80 Q48,-60 40,-150Z" fill="#e6b93a"/>
+   <rect x="-12" y="-60" width="10" height="60" fill="url(#skin)"/><rect x="2" y="-60" width="10" height="60" fill="url(#skin)"/>
+   <path d="M-22,-140 L22,-140 L44,-62 L-44,-62Z" fill="#f29a1e" ${S}/>
+   <g>${[-36,-18,0,18,36].map(x=>`<circle cx="${x}" cy="-60" r="11" fill="#f6c431"/>`).join('')}</g>
+   <g transform="rotate(${-140+wave},20,-132)"><rect x="14" y="-132" width="12" height="56" rx="6" fill="url(#skin)"/></g>
+   <circle cx="0" cy="-172" r="32" fill="#e6b93a"/><circle cx="0" cy="-168" r="26" fill="#fff"/>
+   <circle cx="-9" cy="-170" r="4" fill="#2f6fd6"/><circle cx="9" cy="-170" r="4" fill="#2f6fd6"/>
+   <path d="M-8,-158 q8,7 16,0" stroke="#1d2740" stroke-width="2.5" fill="none"/>
+   <circle cx="22" cy="-196" r="9" fill="#f29a1e"/>
+  </g>`;
+}
+
+function set(t,lightOn){
+  let g=`<rect width="${W}" height="${H}" fill="url(#sky)"/>`;
+  const cx=(t*6)%1500;
+  g+=`<g fill="#fff" opacity=".9"><ellipse cx="${300+cx-200}" cy="110" rx="120" ry="34"/><ellipse cx="${360+cx-200}" cy="92" rx="80" ry="30"/><ellipse cx="${1050-cx*0.6}" cy="70" rx="130" ry="30"/></g>`;
+  // fence
+  let fence='';
+  for(let x=230;x<W;x+=46) fence+=`<path d="M${x},478 V352 L${x+21},334 L${x+42},352 V478Z" fill="#ead9b8" stroke="#b9a37c" stroke-width="2"/>`;
+  g+=fence+`<rect x="230" y="380" width="${W-230}" height="10" fill="#d5c098"/><rect x="230" y="440" width="${W-230}" height="10" fill="#d5c098"/>`;
+  // monkey bars in back
+  g+=`<g filter="url(#card)"><path d="M1060,478 L1110,250 L1130,250 L1080,478Z M1240,478 L1190,250 L1210,250 L1260,478Z" fill="#e14b3f"/><rect x="1100" y="244" width="120" height="14" fill="#e14b3f"/>${[0,1,2,3,4].map(i=>`<rect x="${1116+i*20}" y="258" width="6" height="20" fill="#9aa3ad"/>`).join('')}</g>`;
+  // gauntlet arch
+  g+=`<g filter="url(#card)"><path d="M470,480 V330 Q660,232 850,330 V480 H830 V340 Q660,256 490,340 V480Z" fill="#1fa04a"/>
+     <rect x="560" y="316" width="200" height="66" rx="4" fill="#fbfbf7" transform="rotate(-2,660,349)"/></g>
+     <text x="660" y="343" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="22" fill="#c8312b">BACKYARD</text>
+     <text x="660" y="370" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="22" fill="#2a5bd7">GAUNTLET</text>`;
+  // grass
+  g+=`<rect y="470" width="${W}" height="${H-470}" fill="url(#grass)"/>`;
+  for(let i=0;i<60;i++){const x=(i*97)%W, y=490+((i*53)%220); g+=`<path d="M${x},${y} l3,-9 M${x+5},${y} l-2,-8" stroke="#3f8a3a" stroke-width="2"/>`;}
+  // house + porch
+  g+=`<g filter="url(#card)"><rect x="0" y="250" width="232" height="250" fill="#efe6d6"/><path d="M-10,256 L242,256 L242,232 L-10,232Z" fill="#a8432e"/>
+     <rect x="70" y="330" width="78" height="150" fill="#7a4b2a"/><rect x="40" y="478" width="200" height="22" fill="#c9a77c"/></g>`;
+  g+=`<circle cx="200" cy="304" r="${lightOn?60:0}" fill="url(#glow)"/><circle cx="200" cy="304" r="10" fill="${lightOn?'#fff3a8':'#e8e2c8'}" stroke="#555" stroke-width="2"/>`;
+  return g;
+}
+
+function pit(t, back=true){
+  const {x,y,rx,ry}=PIT;
+  if(back){
+    let g=`<g filter="url(#card)"><ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#3aaee3"/></g><ellipse cx="${x}" cy="${y}" rx="${rx-20}" ry="${ry-12}" fill="url(#mud)"/><ellipse cx="${x-80}" cy="${y-14}" rx="50" ry="10" fill="#a87447" opacity=".7"/>`;
+    g+=`<path d="M${x+190},${y+40} q60,40 140,10 q40,-14 70,10" fill="none" stroke="#1f8f3a" stroke-width="10" stroke-linecap="round"/>`;
+    return g;
+  }
+  return '';
+}
+
+function caption(t){
+  for(const [s,d,txt,who] of LINES){ if(t>=s && t<=s+d+0.2){
+    const a=Math.min(1,seg(t,s,s+.15))*Math.min(1,1-seg(t,s+d,s+d+.2));
+    const w=Math.min(1100,txt.length*15.5+60);
+    return `<g opacity="${a}"><rect x="${640-w/2}" y="652" width="${w}" height="50" rx="10" fill="${who==="F"?"#8a3d0c":"#1d2740"}" opacity=".85"/><text x="640" y="685" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="25" fill="#fff">${txt}</text></g>`;
+  }} return '';
+}
+
+function titleCard(t,a,l1,l2,l3){
+  return `<g opacity="${a}"><rect width="${W}" height="${H}" fill="#f5f1e6"/>
+   ${Array.from({length:22},(_,i)=>`<line x1="0" x2="${W}" y1="${40+i*32}" y2="${40+i*32}" stroke="#b9cde6" stroke-width="1.5"/>`).join('')}
+   <line x1="110" x2="110" y1="0" y2="${H}" stroke="#e58f8f" stroke-width="2"/>
+   <text x="640" y="280" text-anchor="middle" font-family="DejaVu Sans" font-weight="800" font-size="${l3?40:54}" fill="#c22420">${l1}</text>
+   <text x="640" y="360" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="${l3?52:34}" fill="#1d2740">${l2}</text>
+   ${l3?`<text x="640" y="450" text-anchor="middle" font-family="DejaVu Sans" font-weight="600" font-size="26" fill="#5a6578">${l3}</text>`:''}
+  </g>`;
+}
+
+
+function sandbag(x,y,s,rot,label=true){
+  return `<g transform="translate(${x},${y}) rotate(${rot}) scale(${s})" filter="url(#card)">
+    <path d="M-62,-30 Q-70,0 -60,28 Q0,40 60,28 Q70,0 62,-30 Q0,-44 -62,-30Z" fill="#c9a86a" stroke="#7a5a2a" stroke-width="3"/>
+    <path d="M-50,-26 Q0,-36 50,-26" fill="none" stroke="#a8874c" stroke-width="2" stroke-dasharray="6 5"/>
+    <path d="M-62,-30 l-12,-10 M62,-30 l12,-10" stroke="#7a5a2a" stroke-width="5" stroke-linecap="round"/>
+    ${label?`<rect x="-46" y="-12" width="92" height="26" fill="#fffdf6" stroke="#1d2740" stroke-width="2"/><text x="0" y="6" text-anchor="middle" font-family="DejaVu Sans" font-weight="800" font-size="13" fill="#c22420">THE BURDEN</text>`:''}
+  </g>`;
+}
+function walker(x,y,s,ph){ // gray paper silhouette walking away
+  const a=Math.sin(ph)*14;
+  return `<g transform="translate(${x},${y}) scale(${s})" opacity=".55"><circle cx="0" cy="-150" r="20" fill="#6b7380"/>
+   <rect x="-20" y="-128" width="40" height="70" rx="12" fill="#6b7380"/>
+   <g transform="rotate(${a},0,-60)"><rect x="-16" y="-62" width="13" height="62" rx="6" fill="#6b7380"/></g>
+   <g transform="rotate(${-a},0,-60)"><rect x="3" y="-62" width="13" height="62" rx="6" fill="#6b7380"/></g></g>`;
+}
+function note(x,y,txt,rot,a){
+  const w=txt.length*11+30;
+  return `<g opacity="${a}" transform="translate(${x},${y}) rotate(${rot})" filter="url(#card)"><rect x="${-w/2}" y="-20" width="${w}" height="40" fill="#fffdf6" stroke="#1d2740" stroke-width="2"/><text x="0" y="7" text-anchor="middle" font-family="DejaVu Sans" font-weight="800" font-size="18" fill="#1d2740">${txt}</text></g>`;
+}
+function letterCard(a,t){
+  const hand='font-family="DejaVu Sans" font-style="italic" font-weight="600" fill="#2f4f8f"';
+  const r=(t0)=>Math.min(1,seg(t,t0,t0+0.5));
+  return `<g opacity="${a}"><rect width="${W}" height="${H}" fill="#000" opacity=".35"/>
+   <g filter="url(#card)"><rect x="420" y="150" width="440" height="440" fill="#fffdf6" stroke="#b9cde6" stroke-width="2"/></g>
+   ${Array.from({length:12},(_,i)=>`<line x1="430" x2="850" y1="${216+i*32}" y2="${216+i*32}" stroke="#d3e1f2" stroke-width="1.5"/>`).join('')}
+   <text x="455" y="208" ${hand} font-size="32" opacity="${r(76.5)}">Dear sandbag,</text>
+   <text x="470" y="302" ${hand} font-size="28" opacity="${r(79.1)}">You're getting heavy.</text>
+   <text x="470" y="398" ${hand} font-size="28" opacity="${r(81.8)}">I think I should</text>
+   <text x="470" y="430" ${hand} font-size="28" opacity="${r(82.4)}">put you down.</text>
+   <path d="M790,528 l-12,-12 a8,8 0 0 1 12,-10 a8,8 0 0 1 12,10z" fill="#d62c2c" opacity="${r(83.0)}"/>
+   <text x="760" y="560" text-anchor="end" ${hand} font-size="24" opacity="${r(83.0)}">love, MH</text></g>`;
+}
+function render(t){
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${DEFS}`;
+  s+=set(t,false)+marigold(t);
+  // footprints path toward the walkers
+  for(let i=0;i<9;i++) s+=`<ellipse cx="${640+i*70}" cy="${600-(i%2)*14}" rx="10" ry="5" fill="#4f8a43" opacity=".6"/>`;
+  // walkers leaving (chasing section)
+  if(t>=14.5&&t<54){ const u=seg(t,14.5,54); const a=Math.min(seg(t,14.5,15.5),1-seg(t,52,54));
+     s+=`<g opacity="${a}">`+walker(1060+u*260,600,0.9,t*5)+walker(1160+u*240,590,0.8,t*5+1)+`</g>`; }
+  // --- Muscle Hero
+  let mx=340, my=640, walking=false, ph=0, sit=0, bagScale=1;
+  if(t>=3.2&&t<14.5){ mx=lerp(340,460,seg(t,3.2,14.5)); walking=true; ph=(t-3.2)*Math.PI/1.1; }
+  else if(t>=14.5&&t<28){ mx=lerp(460,640,seg(t,14.5,28)); walking=true; ph=(t-14.5)*Math.PI/0.8; bagScale=1+0.35*seg(t,14.5,28); }
+  else if(t>=28) { mx=640; bagScale=1.35-0.35*seg(t,84.4,86); }
+  if(t>=58.8) sit=ease(seg(t,58.8,59.8))*(1-ease(seg(t,83.6,84.4)));
+  const carrying = t<58.8 || t>=86.0;
+  // bag on ground while sitting / writing
+  let bagX=mx+10, bagY=640;
+  s+=`<ellipse cx="${mx}" cy="644" rx="70" ry="10" fill="#00000030"/>`;
+  const mhY=my+sit*58;
+  const mh=`<g transform="translate(${mx},${mhY})" filter="url(#card)">${muscleHero({t,walk:ph,walking,armUp:0,muddy:false})}</g>`;
+  // Eric carry section
+  let ex=1460, epull=0, etap=0, ewalk=false, eph=0;
+  if(t>=84.4&&t<86.0){ ex=lerp(1460,880,ease(seg(t,84.4,86.0))); ewalk=true; eph=(t-84.4)*Math.PI/0.4; }
+  else if(t>=86.0){ ex=880; epull=0.62; if(t>=87.0&&t<87.4) etap=seg(t,87.0,87.4); }
+  if(t<58.8){
+    s+=mh+sandbag(mx+88,mhY-228,0.72*bagScale,18+Math.sin(t*3)*3);
+  } else if(t<86.0){
+    s+=mh+sandbag(bagX,612,1.25,0);
+  } else {
+    s+=`<ellipse cx="${ex}" cy="644" rx="70" ry="11" fill="#00000030"/>`;
+    s+=`<g transform="translate(${ex},640) scale(1.05)" filter="url(#card)">${eric({walk:eph,walking:ewalk,pull:epull,tap:etap})}</g>`;
+    s+=mh+sandbag(762,548,1.0,0);
+  }
+  if(t>=84.4&&t<86.0) s+=`<g transform="translate(${ex},640) scale(1.05)" filter="url(#card)">${eric({walk:eph,walking:ewalk})}</g>`;
+  // notes popping out of the bag (line 8)
+  const nt=(t0,x,y,txt,r)=>{ if(t>=t0&&t<53.8){ const u=ease(seg(t,t0,t0+.6)); return note(lerp(mx+88,x,u),lerp(mhY-228,y,u),txt,r*u,Math.min(1,u*2)*(1-seg(t,53.2,53.8))); } return ''; };
+  s+=nt(39.6,420,170,"I'M FINE",-6)+nt(41.2,700,130,"DON'T BOTHER ANYONE",4)+nt(45.0,960,190,"PEOPLE I KEEP RUNNING AFTER",-3);
+  // Foxy (narrator, bottom-left) with a little bounce when she talks
+  let fb=0; for(const [st,d,,who] of LINES){ if(who==="F"&&t>=st&&t<=st+d) fb=Math.abs(Math.sin(t*9))*-6; }
+  if(t>=3.0&&t<99) s+=`<g transform="translate(0,${fb})">${foxy()}</g>`;
+  // pen flies from Foxy to MH
+  if(t>=66.6&&t<68.0){ const u=ease(seg(t,66.6,68.0)); s+=`<g transform="translate(${lerp(230,mx-40,u)},${lerp(600,470,u)-Math.sin(Math.PI*u)*120}) rotate(${u*540})"><rect x="-4" y="-34" width="8" height="60" rx="3" fill="#2f4f8f"/><path d="M-4,26 L0,38 L4,26Z" fill="#1d2740"/></g>`; }
+  if(t>=68.0&&t<84.0) s+=`<g transform="translate(${mx-48},${mhY-150}) rotate(-10)"><rect x="-26" y="-34" width="52" height="64" fill="#fffdf6" stroke="#b9cde6" stroke-width="2"/><path d="M-18,-20 h36 M-18,-8 h30 M-18,4 h34 M-18,16 h24" stroke="#2f4f8f" stroke-width="2"/></g>`;
+  // mouse cards
+  const card=(t0,t1,l1,l2)=>{ if(t>=t0&&t<t1){ const pop=Math.min(1,seg(t,t0,t0+.18)); const sc=pop<1? pop*1.12 : 1; const out=1-seg(t,t1-.25,t1); return mouse(1040,700+(1-out)*260,sc,l1,l2);} return ''; };
+  s+=card(25.7,28.4,"CHASING.");
+  s+=card(50.2,54.2,"CHASING PEOPLE","= WASTED ENERGY.");
+  // letter close-up during line 13
+  if(t>=76.0&&t<84.4) s+=letterCard(Math.min(seg(t,76.0,76.5),1-seg(t,83.9,84.4)),t);
+  s+=caption(t);
+  if(t<3.0) s+=titleCard(t,1-seg(t,2.6,3.0),"EVERY OBSTACLE NEEDS A FRIEND","Chapter 4 · A Love Letter to a Sandbag");
+  if(t>=96.4){ const a=seg(t,96.4,96.9);
+    s+=titleCard(t,a,"RELEASED. NO PENALTY.","Let it rest.","Field Exercise: write a love letter to something you need to put down.");
+    s+=`<g opacity="${a}"><text x="640" y="560" text-anchor="middle" font-family="DejaVu Sans" font-weight="800" font-size="30" fill="#1d2740">Do it the Muscle Hero way!</text><text x="640" y="610" text-anchor="middle" font-family="DejaVu Sans" font-weight="600" font-size="20" fill="#5a6578">Please “Don’t” Help · a Paper Hero Club book</text></g>`; }
+  s+='</svg>';
+  document.getElementById('stage').innerHTML=s;
+}
+window.render=render; render(0);
+</script></body></html>

@@ -1,0 +1,439 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}svg{display:block}</style></head>
+<body><div id="stage"></div>
+<script>
+const W=1280,H=720, END=80;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const seg=(t,a,b)=>clamp((t-a)/(b-a),0,1);
+const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+const lerp=(a,b,u)=>a+(b-a)*u;
+const PIT={x:660,y:615,rx:240,ry:66};
+const LINES=[
+ [8.8,9.1,"Monkey bars. Arms only. No crutches. What could go wrong?"],
+ [23.8,8.4,"You don't have to count. It's three rungs. It's always three rungs."],
+ [37.2,4.9,"Four was on purpose. Totally planned."],
+ [45.8,9.3,"I'm not flying. My hands are on fire. But… keep counting."],
+ [60.0,7.7,"Two more than usual. Because somebody counted out loud."],
+ [71.2,2.6,"Do it the Muscle Hero way!"],
+];
+
+const DEFS=`<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86c6ea"/><stop offset="1" stop-color="#d4ecf8"/></linearGradient>
+<linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86c96f"/><stop offset="1" stop-color="#5a9e4b"/></linearGradient>
+<linearGradient id="skin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f5cfa6"/><stop offset=".55" stop-color="#e2aa7a"/><stop offset="1" stop-color="#b8784a"/></linearGradient>
+<linearGradient id="skinD" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9a679"/><stop offset="1" stop-color="#9c6238"/></linearGradient>
+<linearGradient id="cape" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d63a2f"/><stop offset="1" stop-color="#8f1d17"/></linearGradient>
+<linearGradient id="shorts" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a7bf0"/><stop offset="1" stop-color="#1d4fb8"/></linearGradient>
+<linearGradient id="teal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2bb3a8"/><stop offset="1" stop-color="#16756f"/></linearGradient>
+<linearGradient id="tealD" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1f8d85"/><stop offset="1" stop-color="#0f5651"/></linearGradient>
+<linearGradient id="bull" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a8703f"/><stop offset="1" stop-color="#6e4422"/></linearGradient>
+<linearGradient id="fox" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f29a45"/><stop offset="1" stop-color="#c8651e"/></linearGradient>
+<linearGradient id="mouse" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c4c8cf"/><stop offset="1" stop-color="#8b9099"/></linearGradient>
+<radialGradient id="mud" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#8a5a33"/><stop offset="1" stop-color="#5a3519"/></radialGradient>
+<linearGradient id="steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c9ced6"/><stop offset="1" stop-color="#7f8793"/></linearGradient>
+<radialGradient id="glow"><stop offset="0" stop-color="#fff3a8" stop-opacity=".95"/><stop offset="1" stop-color="#fff3a8" stop-opacity="0"/></radialGradient>
+<filter id="card" x="-25%" y="-25%" width="150%" height="150%">
+ <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="d"/>
+ <feOffset in="d" dx="2.5" dy="3" result="o"/>
+ <feFlood flood-color="#3b2a1e" flood-opacity=".6"/><feComposite in2="o" operator="in" result="edge"/>
+ <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="b"/><feOffset in="b" dx="7" dy="10" result="bo"/>
+ <feFlood flood-color="#000" flood-opacity=".22"/><feComposite in2="bo" operator="in" result="shadow"/>
+ <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4" result="n"/>
+ <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .12 0" result="na"/>
+ <feComposite in="na" in2="SourceAlpha" operator="in" result="grain"/>
+ <feMerge><feMergeNode in="shadow"/><feMergeNode in="edge"/><feMergeNode in="SourceGraphic"/><feMergeNode in="grain"/></feMerge>
+</filter>
+<clipPath id="mudline"><rect x="-2000" y="-2000" width="4000" height="${2000+PIT.y-8}"/></clipPath>
+<clipPath id="faceclip"><circle cx="0" cy="0" r="40"/></clipPath>
+</defs>`;
+
+const S='stroke="#00000030" stroke-width="1.5"';
+
+function bubble(x,y,w,h,text,tailX,tailY,size=26){
+  return `<g filter="url(#card)"><path d="M${x+18},${y} h${w-36} q18,0 18,18 v${h-36} q0,18 -18,18 H${Math.min(x+w-30,Math.max(x+30,tailX+24))} L${tailX},${tailY} L${Math.min(x+w-50,Math.max(x+20,tailX+4))},${y+h} H${x+18} q-18,0 -18,-18 v${-(h-36)} q0,-18 18,-18z" fill="#fff" stroke="#1d2740" stroke-width="3"/></g>
+  <text x="${x+w/2}" y="${y+h/2+size*0.36}" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-weight="700" font-size="${size}" fill="#1d2740">${text}</text>`;
+}
+
+function muscleHero(o){
+  const ph=o.walk??0, walking=o.walking?1:0;
+  const legA=o.hang? Math.sin(o.t*3.2)*8+(o.kick||0) : Math.sin(ph)*14*walking;
+  const crA=Math.sin(ph+Math.PI/2)*22*walking;
+  const flut=Math.sin(o.t*7)*6;
+  const bob=walking?Math.abs(Math.sin(ph))*-5:0;
+  let g=`<g transform="translate(0,${bob})">`;
+  // cape
+  g+=`<path d="M-55,-212 L55,-212 L${88+flut},-48 Q0,${-32+flut/2} ${-88+flut},-48 Z" fill="url(#cape)" ${S}/>`;
+  // far leg (viewer left, darker)
+  const leg=(hx,a,fill)=>`<g transform="rotate(${a},${hx},-112)"><rect x="${hx-14}" y="-114" width="28" height="104" rx="13" fill="${fill}" ${S}/><ellipse cx="${hx}" cy="-60" rx="12" ry="18" fill="#ffffff22"/><rect x="${hx-19}" y="-14" width="40" height="15" rx="7" fill="#f0f0f0" stroke="#555" stroke-width="2"/></g>`;
+  g+=leg(-17,legA,'url(#skinD)');
+  g+=leg(17,-legA,'url(#skin)');
+  if(o.muddy) g+=`<path d="M-36,-70 Q-20,-52 -8,-66 Q4,-48 18,-62 Q30,-50 38,-68 L38,0 L-36,0Z" fill="#5a3519" opacity=".75"/><circle cx="-10" cy="-78" r="4" fill="#5a3519"/><circle cx="22" cy="-84" r="3" fill="#5a3519"/>`;
+  // shorts
+  g+=`<path d="M-42,-142 H42 L46,-92 H6 L0,-108 L-6,-92 H-46Z" fill="url(#shorts)" ${S}/>`;
+  if(o.muddy) g+=`<path d="M-46,-100 Q-30,-112 -14,-98 Q0,-110 14,-98 Q30,-112 46,-100 L46,-92 H-46Z" fill="#5a3519" opacity=".7"/>`;
+  // torso
+  g+=`<path d="M-64,-216 Q-74,-186 -40,-134 L40,-134 Q74,-186 64,-216 Q0,-230 -64,-216Z" fill="url(#skin)" ${S}/>`;
+  g+=`<ellipse cx="-24" cy="-198" rx="24" ry="13" fill="#ffffff26"/><ellipse cx="24" cy="-198" rx="24" ry="13" fill="#00000014"/>`;
+  for(let r=0;r<3;r++)for(let c=0;c<2;c++) g+=`<rect x="${c?3:-21}" y="${-178+r*15}" width="18" height="12" rx="6" fill="#00000012" stroke="#00000022"/>`;
+  g+=`<circle cx="0" cy="-196" r="13" fill="#f2b705" stroke="#1d2740" stroke-width="2.5"/><text x="0" y="-191.5" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="11" fill="#1d2740">MH</text>`;
+  if(o.star) g+=`<path d="M-34,-176 l6,13 14,2 -10,10 3,14 -13,-7 -13,7 3,-14 -10,-10 14,-2z" fill="#ffd23a" stroke="#b8860b" stroke-width="2"/>`;
+  // crutches + arms
+  const arm=(side,ang,fill,tattoo)=>{
+    const sx=side*60;
+    return `<g transform="rotate(${ang},${sx},-206)">
+      <circle cx="${sx}" cy="-206" r="23" fill="${fill}" ${S}/>
+      <rect x="${sx-16}" y="-206" width="32" height="58" rx="15" fill="${fill}" ${S}/>
+      ${tattoo?`<path d="M${sx},-168 l-7,-7 a4.5,4.5 0 0 1 7,-6 a4.5,4.5 0 0 1 7,6z" fill="#d62c2c"/>`:''}
+      <rect x="${sx-12}" y="-154" width="24" height="50" rx="11" fill="${fill}" ${S}/>
+      <circle cx="${sx}" cy="-100" r="12" fill="${fill}" ${S}/></g>`;
+  };
+  const crutch=(side,tipX,tipY=0,holdX=side*66,holdY=-104)=>{
+    const cx=holdX, cy=holdY-44;
+    return `<g><line x1="${cx}" y1="${cy}" x2="${tipX}" y2="${tipY}" stroke="url(#steel)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M${cx-11},${cy-4} q11,-10 22,0" fill="none" stroke="#6b7380" stroke-width="5" stroke-linecap="round"/>
+      <line x1="${holdX-8}" y1="${holdY}" x2="${holdX+8}" y2="${holdY}" stroke="#3a3f47" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="${tipX}" cy="${tipY}" r="5" fill="#222"/></g>`;
+  };
+  const leftTip=-78+crA, rightTip=78-crA;
+  if(o.hang){
+    g+=arm(-1,172,'url(#skinD)',false);
+    g+=arm(1,-172,'url(#skin)',true);
+    if(o.fire){ for(const hx of [-14,14]){ const f=Math.sin(o.t*30+hx)*4; g+=`<path d="M${hx-9},-318 Q${hx-4},${-344+f} ${hx},-356 Q${hx+5},${-342-f} ${hx+9},-318Z" fill="#ff8a1e" opacity=".9"/><path d="M${hx-4},-318 Q${hx},${-336+f} ${hx+4},-318Z" fill="#ffe14a"/>`;} }
+  } else if(o.noCrutch){
+    g+=arm(-1,8,'url(#skinD)',false);
+    g+=arm(1,-8,'url(#skin)',true);
+  } else {
+  // far crutch & arm
+  g+=crutch(-1,leftTip);
+  g+=arm(-1,6,'url(#skinD)',false);
+  if(o.armUp>0){
+    // right crutch left stuck upright in mud next to him
+    g+=crutch(1,92,0,92,-110);
+    g+=arm(1,lerp(-6,-150,o.armUp),'url(#skin)',true);
+    if(o.armUp>.8) g+=`<g transform="rotate(-150,60,-206)"><path d="M60,-90 v-18" stroke="#e2aa7a" stroke-width="9" stroke-linecap="round"/></g>`;
+  } else {
+    g+=crutch(1,rightTip);
+    g+=arm(1,-6,'url(#skin)',true);
+  }
+  }
+  // head
+  g+=`<g transform="translate(0,-268)">
+    <rect x="-14" y="22" width="28" height="22" fill="url(#skin)"/>
+    <circle r="43" fill="#1d2740"/>
+    <image href="face.png" x="-41" y="-41" width="82" height="82"/>
+    <path d="M-38,-26 Q0,-44 38,-26 L40,-15 Q0,-33 -40,-15Z" fill="#d62c2c" stroke="#8f1d17" stroke-width="1.5"/>
+    <path d="M37,-22 q${22},${-6+flut} ${44},${4+flut}" stroke="#d62c2c" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <path d="M37,-18 q${18},${4+flut} ${36},${16-flut}" stroke="#c22420" stroke-width="8" fill="none" stroke-linecap="round"/>
+  </g>`;
+  return g+'</g>';
+}
+
+function eric(o){
+  const ph=o.walk??0, w=o.walking?1:0, legA=Math.sin(ph)*12*w;
+  const lift=o.tap?-12*Math.sin(Math.PI*o.tap):0;
+  let g='';
+  const leg=(hx,a,fill,dy=0)=>`<g transform="rotate(${a},${hx},-118) translate(0,${dy})"><rect x="${hx-16}" y="-120" width="32" height="112" rx="10" fill="${fill}" ${S}/><path d="M${hx-18},-12 h36 v12 h-36z M${hx},-12 v12" fill="#3b2414" stroke="#1d120a" stroke-width="2"/></g>`;
+  g+=leg(-20,legA,'url(#tealD)');
+  g+=leg(20,-legA,'url(#teal)',lift);
+  g+=`<rect x="-58" y="-250" width="116" height="140" rx="22" fill="url(#teal)" ${S}/>`;
+  g+=`<path d="M-20,-250 L0,-222 L20,-250" fill="none" stroke="#0f5651" stroke-width="4"/>`;
+  g+=`<circle cx="0" cy="-168" r="36" fill="#d62c2c" stroke="#8f1d17" stroke-width="3"/><path d="M-26,-168 h52 M0,-194 v52" stroke="#8f1d17" stroke-width="2" stroke-dasharray="5 4"/>`;
+  g+=`<path d="M-30,-248 Q-36,-200 -10,-196 Q4,-196 6,-210" fill="none" stroke="#8a929c" stroke-width="4"/><circle cx="6" cy="-212" r="6" fill="#c9ced6" stroke="#6b7380" stroke-width="2"/>`;
+  const p=o.pull||0;
+  if(p>0){
+    const ang=lerp(0,-70,ease(Math.min(1,p*1.6)));
+    g+=`<g transform="rotate(${ang},-50,-228)"><rect x="-64" y="-236" width="28" height="${lerp(70,150,Math.min(1,p*1.6))}" rx="13" fill="url(#teal)" ${S}/><circle cx="-50" cy="${-236+lerp(76,156,Math.min(1,p*1.6))}" r="22" fill="#d62c2c" stroke="#8f1d17" stroke-width="3"/></g>`;
+    g+=`<rect x="20" y="-232" width="26" height="80" rx="12" fill="url(#tealD)" ${S}/><circle cx="33" cy="-150" r="21" fill="#b52222" stroke="#8f1d17" stroke-width="3"/>`;
+  } else {
+    g+=`<rect x="-62" y="-214" width="124" height="28" rx="14" fill="url(#tealD)" ${S}/><rect x="-62" y="-200" width="124" height="28" rx="14" fill="url(#teal)" ${S}/>`;
+    g+=`<circle cx="-54" cy="-200" r="22" fill="#d62c2c" stroke="#8f1d17" stroke-width="3"/><circle cx="54" cy="-200" r="22" fill="#b52222" stroke="#8f1d17" stroke-width="3"/>`;
+  }
+  g+=`<g transform="translate(0,-292)">
+    <path d="M-34,-24 Q-74,-36 -70,-70 Q-58,-44 -30,-38Z" fill="#f4efe4" stroke="#9c8f78" stroke-width="2"/>
+    <path d="M34,-24 Q74,-36 70,-70 Q58,-44 30,-38Z" fill="#f4efe4" stroke="#9c8f78" stroke-width="2"/>
+    <ellipse cx="-44" cy="-10" rx="14" ry="8" fill="#8a5a33"/><ellipse cx="44" cy="-10" rx="14" ry="8" fill="#6e4422"/>
+    <ellipse rx="40" ry="44" fill="url(#bull)" ${S}/>
+    <ellipse cx="0" cy="22" rx="27" ry="19" fill="#e9c8a0" stroke="#00000030"/>
+    <ellipse cx="-9" cy="23" rx="4" ry="5" fill="#3b2414"/><ellipse cx="9" cy="23" rx="4" ry="5" fill="#3b2414"/>
+    <circle cx="-14" cy="-10" r="5" fill="#1d120a"/><circle cx="14" cy="-10" r="5" fill="#1d120a"/>
+    <path d="M-24,-22 l14,4 M24,-22 l-14,4" stroke="#1d120a" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="0" cy="38" r="5" fill="none" stroke="#c9a227" stroke-width="3"/>
+  </g>`;
+  return g;
+}
+
+function foxy(){
+  return `<g transform="translate(150,720)" filter="url(#card)">
+   <path d="M-70,0 Q-70,-80 0,-86 Q70,-80 70,0Z" fill="#6c4a9e" ${S}/>
+   <rect x="-12" y="-74" width="24" height="60" fill="#fff" opacity=".8"/>
+   <g transform="translate(0,-130)">
+     <path d="M-40,-20 L-50,-82 L-12,-40Z M40,-20 L50,-82 L12,-40Z" fill="url(#fox)" ${S}/>
+     <path d="M-38,-30 L-44,-66 L-20,-40Z M38,-30 L44,-66 L20,-40Z" fill="#3b2414"/>
+     <ellipse rx="48" ry="44" fill="url(#fox)" ${S}/>
+     <path d="M-46,4 Q-24,36 0,44 Q24,36 46,4 Q20,18 0,16 Q-20,18 -46,4Z" fill="#fff8ee"/>
+     <circle cx="-17" cy="-6" r="12" fill="none" stroke="#1d2740" stroke-width="3"/><circle cx="17" cy="-6" r="12" fill="none" stroke="#1d2740" stroke-width="3"/><path d="M-5,-6 h10" stroke="#1d2740" stroke-width="3"/>
+     <circle cx="-17" cy="-6" r="4" fill="#1d120a"/><circle cx="17" cy="-6" r="4" fill="#1d120a"/>
+     <ellipse cx="0" cy="18" rx="7" ry="5" fill="#1d120a"/>
+   </g>
+   <rect x="34" y="-64" width="44" height="58" rx="4" fill="#c8a06a" stroke="#6b4a24" stroke-width="2"/><rect x="40" y="-56" width="32" height="44" fill="#fff"/>
+  </g>`;
+}
+
+function mouse(x,y,s,l1,l2){
+  return `<g transform="translate(${x},${y}) scale(${s})">
+   <g filter="url(#card)">
+    <rect x="-150" y="-250" width="300" height="104" rx="8" fill="#fffdf6" stroke="#1d2740" stroke-width="4"/>
+    <path d="M-34,-148 L-40,-96 M34,-148 L40,-96" stroke="#c9a06a" stroke-width="7"/>
+    <path d="M40,-20 Q90,0 80,-50" fill="none" stroke="#e7a5b0" stroke-width="5"/>
+    <ellipse cx="0" cy="-40" rx="38" ry="44" fill="url(#mouse)" ${S}/>
+    <circle cx="-30" cy="-112" r="20" fill="url(#mouse)" ${S}/><circle cx="-30" cy="-112" r="11" fill="#f0b4c0"/>
+    <circle cx="30" cy="-112" r="20" fill="url(#mouse)" ${S}/><circle cx="30" cy="-112" r="11" fill="#f0b4c0"/>
+    <ellipse cx="0" cy="-88" rx="32" ry="28" fill="url(#mouse)" ${S}/>
+    <circle cx="-11" cy="-92" r="4.5" fill="#1d120a"/><circle cx="11" cy="-92" r="4.5" fill="#1d120a"/><circle cx="0" cy="-74" r="5" fill="#e07a8c"/>
+    <circle cx="-40" cy="-100" r="9" fill="url(#mouse)"/><circle cx="40" cy="-100" r="9" fill="url(#mouse)"/>
+   </g>
+   <text x="0" y="-${l2?212:190}" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="17" fill="#6b7380" letter-spacing="3">TRANSLATION:</text>
+   <text x="0" y="-${l2?184:160}" text-anchor="middle" font-family="DejaVu Sans" font-weight="800" font-size="${l2?24:32}" fill="#c22420">${l1}</text>
+   ${l2?`<text x="0" y="-157" text-anchor="middle" font-family="DejaVu Sans" font-weight="800" font-size="24" fill="#c22420">${l2}</text>`:''}
+  </g>`;
+}
+
+function marigold(t){
+  const wave=Math.sin(t*5)*25;
+  return `<g transform="translate(120,488) scale(.5)" filter="url(#card)">
+   <path d="M-40,-150 Q-48,-60 -46,-80 L46,-80 Q48,-60 40,-150Z" fill="#e6b93a"/>
+   <rect x="-12" y="-60" width="10" height="60" fill="url(#skin)"/><rect x="2" y="-60" width="10" height="60" fill="url(#skin)"/>
+   <path d="M-22,-140 L22,-140 L44,-62 L-44,-62Z" fill="#f29a1e" ${S}/>
+   <g>${[-36,-18,0,18,36].map(x=>`<circle cx="${x}" cy="-60" r="11" fill="#f6c431"/>`).join('')}</g>
+   <g transform="rotate(${-140+wave},20,-132)"><rect x="14" y="-132" width="12" height="56" rx="6" fill="url(#skin)"/></g>
+   <circle cx="0" cy="-172" r="32" fill="#e6b93a"/><circle cx="0" cy="-168" r="26" fill="#fff"/>
+   <circle cx="-9" cy="-170" r="4" fill="#2f6fd6"/><circle cx="9" cy="-170" r="4" fill="#2f6fd6"/>
+   <path d="M-8,-158 q8,7 16,0" stroke="#1d2740" stroke-width="2.5" fill="none"/>
+   <circle cx="22" cy="-196" r="9" fill="#f29a1e"/>
+  </g>`;
+}
+
+function set(t,lightOn){
+  let g=`<rect width="${W}" height="${H}" fill="url(#sky)"/>`;
+  const cx=(t*6)%1500;
+  g+=`<g fill="#fff" opacity=".9"><ellipse cx="${300+cx-200}" cy="110" rx="120" ry="34"/><ellipse cx="${360+cx-200}" cy="92" rx="80" ry="30"/><ellipse cx="${1050-cx*0.6}" cy="70" rx="130" ry="30"/></g>`;
+  // fence
+  let fence='';
+  for(let x=230;x<W;x+=46) fence+=`<path d="M${x},478 V352 L${x+21},334 L${x+42},352 V478Z" fill="#ead9b8" stroke="#b9a37c" stroke-width="2"/>`;
+  g+=fence+`<rect x="230" y="380" width="${W-230}" height="10" fill="#d5c098"/><rect x="230" y="440" width="${W-230}" height="10" fill="#d5c098"/>`;
+  // monkey bars in back
+  g+=`<g filter="url(#card)"><path d="M1060,478 L1110,250 L1130,250 L1080,478Z M1240,478 L1190,250 L1210,250 L1260,478Z" fill="#e14b3f"/><rect x="1100" y="244" width="120" height="14" fill="#e14b3f"/>${[0,1,2,3,4].map(i=>`<rect x="${1116+i*20}" y="258" width="6" height="20" fill="#9aa3ad"/>`).join('')}</g>`;
+  // gauntlet arch
+  g+=`<g filter="url(#card)"><path d="M470,480 V330 Q660,232 850,330 V480 H830 V340 Q660,256 490,340 V480Z" fill="#1fa04a"/>
+     <rect x="560" y="316" width="200" height="66" rx="4" fill="#fbfbf7" transform="rotate(-2,660,349)"/></g>
+     <text x="660" y="343" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="22" fill="#c8312b">BACKYARD</text>
+     <text x="660" y="370" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="22" fill="#2a5bd7">GAUNTLET</text>`;
+  // grass
+  g+=`<rect y="470" width="${W}" height="${H-470}" fill="url(#grass)"/>`;
+  for(let i=0;i<60;i++){const x=(i*97)%W, y=490+((i*53)%220); g+=`<path d="M${x},${y} l3,-9 M${x+5},${y} l-2,-8" stroke="#3f8a3a" stroke-width="2"/>`;}
+  // house + porch
+  g+=`<g filter="url(#card)"><rect x="0" y="250" width="232" height="250" fill="#efe6d6"/><path d="M-10,256 L242,256 L242,232 L-10,232Z" fill="#a8432e"/>
+     <rect x="70" y="330" width="78" height="150" fill="#7a4b2a"/><rect x="40" y="478" width="200" height="22" fill="#c9a77c"/></g>`;
+  g+=`<circle cx="200" cy="304" r="${lightOn?60:0}" fill="url(#glow)"/><circle cx="200" cy="304" r="10" fill="${lightOn?'#fff3a8':'#e8e2c8'}" stroke="#555" stroke-width="2"/>`;
+  return g;
+}
+
+function pit(t, back=true){
+  const {x,y,rx,ry}=PIT;
+  if(back){
+    let g=`<g filter="url(#card)"><ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#3aaee3"/></g><ellipse cx="${x}" cy="${y}" rx="${rx-20}" ry="${ry-12}" fill="url(#mud)"/><ellipse cx="${x-80}" cy="${y-14}" rx="50" ry="10" fill="#a87447" opacity=".7"/>`;
+    g+=`<path d="M${x+190},${y+40} q60,40 140,10 q40,-14 70,10" fill="none" stroke="#1f8f3a" stroke-width="10" stroke-linecap="round"/>`;
+    return g;
+  }
+  return '';
+}
+
+function caption(t){
+  for(const [s,d,txt] of LINES){ if(t>=s && t<=s+d+0.2){
+    const a=Math.min(1,seg(t,s,s+.15))*Math.min(1,1-seg(t,s+d,s+d+.2));
+    const w=Math.min(1100,txt.length*15.5+60);
+    return `<g opacity="${a}"><rect x="${640-w/2}" y="652" width="${w}" height="50" rx="10" fill="#1d2740" opacity=".82"/><text x="640" y="685" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="25" fill="#fff">${txt}</text></g>`;
+  }} return '';
+}
+
+function titleCard(t,a,l1,l2,l3){
+  return `<g opacity="${a}"><rect width="${W}" height="${H}" fill="#f5f1e6"/>
+   ${Array.from({length:22},(_,i)=>`<line x1="0" x2="${W}" y1="${40+i*32}" y2="${40+i*32}" stroke="#b9cde6" stroke-width="1.5"/>`).join('')}
+   <line x1="110" x2="110" y1="0" y2="${H}" stroke="#e58f8f" stroke-width="2"/>
+   <text x="640" y="280" text-anchor="middle" font-family="DejaVu Sans" font-weight="800" font-size="${l3?40:54}" fill="#c22420">${l1}</text>
+   <text x="640" y="360" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="${l3?52:34}" fill="#1d2740">${l2}</text>
+   ${l3?`<text x="640" y="450" text-anchor="middle" font-family="DejaVu Sans" font-weight="600" font-size="26" fill="#5a6578">${l3}</text>`:''}
+  </g>`;
+}
+
+function render(t){
+  // ---- Muscle Hero position/state
+  let mx, my, mrot=0, walking=false, ph=0, armUp=0, inPit=false, muddy=false, sc=1;
+  const sink=55;
+  if(t<3.2){ mx=-140; my=640; }
+  else if(t<12.5){ const u=seg(t,3.2,12.5); mx=lerp(-140,420,u); my=640; walking=true; ph=(t-3.2)*Math.PI/0.9; }
+  else if(t<15.3){ mx=420; my=640; }
+  else if(t<16.0){ const u=ease(seg(t,15.3,16.0)); mx=lerp(420,610,u); my=lerp(640,PIT.y+28,u)-Math.sin(Math.PI*u)*40; inPit=u>.6; }
+  else if(t<38.6){ inPit=true; mx=610; const u=ease(seg(t,16.0,17.0)); my=PIT.y+28+u*sink+Math.sin(t*3)*2;
+      mrot=t>17&&t<22.6?Math.sin(t*4)*4:0;
+      if(t>=25.5&&t<33.5) armUp=Math.min(seg(t,25.5,26.1),1-seg(t,33.0,33.5)); }
+  else if(t<40.0){ const u=ease(seg(t,38.6,40.0)); mx=lerp(610,850,u); my=lerp(PIT.y+28+sink,640,u)-Math.sin(Math.PI*u)*170; mrot=Math.sin(Math.PI*u)*-25; inPit=u<.15; muddy=true; }
+  else { mx=850; my=640; muddy=true; }
+  // ---- Eric
+  let ex=1460, ewalk=false, eph=0, pull=0, tap=0;
+  if(t>=22.6&&t<24.4){ ex=lerp(1460,1090,ease(seg(t,22.6,24.4))); ewalk=true; eph=(t-22.6)*Math.PI/0.4; }
+  else if(t>=24.4&&t<51.6){ ex=1090; if(t>=38.2&&t<40.4) pull=seg(t,38.2,40.4); if(t>=50.8&&t<51.2) tap=seg(t,50.8,51.2); }
+  else if(t>=51.6&&t<54.4){ ex=lerp(1090,1480,ease(seg(t,51.6,54.4))); ewalk=true; eph=(t-51.6)*Math.PI/0.4; }
+  const lightOn=t>=53.0&&t<53.45;
+  // camera
+  const z=t>=54&&t<61.2? 1+0.22*ease(seg(t,54,55.2)) : 1;
+  const camX=850, camY=470;
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${DEFS}`;
+  s+=`<g transform="translate(${camX},${camY}) scale(${z}) translate(${-camX},${-camY})">`;
+  s+=set(t,lightOn)+marigold(t)+pit(t,true);
+  // mud bubbles
+  if(t>16&&t<38.6){ for(let i=0;i<5;i++){ const ph2=(t*0.8+i*0.37)%1; s+=`<circle cx="${PIT.x-150+i*70}" cy="${PIT.y+10-(i%2)*12}" r="${3+ph2*7}" fill="none" stroke="#a87447" stroke-width="2" opacity="${1-ph2}"/>`; } }
+  // contact shadows
+  if(!inPit) s+=`<ellipse cx="${mx}" cy="${Math.max(my,640)+4}" rx="${70*(1-Math.max(0,640-my)/300)}" ry="10" fill="#00000030"/>`;
+  s+=`<ellipse cx="${ex}" cy="644" rx="70" ry="11" fill="#00000030"/>`;
+  // Eric
+  s+=`<g transform="translate(${ex},640) scale(1.05)" filter="url(#card)">${eric({walk:eph,walking:ewalk,pull,tap})}</g>`;
+  // MH
+  const mh=`<g transform="translate(${mx},${my}) rotate(${mrot})" filter="url(#card)">${muscleHero({t,walk:ph,walking,armUp,muddy})}</g>`;
+  s+= inPit? `<g clip-path="url(#mudline)">${mh}</g><ellipse cx="${mx}" cy="${PIT.y-6}" rx="62" ry="12" fill="#6b4122" stroke="#8a5a33" stroke-width="3"/>` : mh;
+  // splash on step-in / pull
+  const splash=(t0)=>{ if(t>=t0&&t<t0+0.6){ const u=seg(t,t0,t0+0.6); let o=''; for(let i=0;i<9;i++){ const a=-Math.PI*(0.1+0.8*i/8); o+=`<circle cx="${610+Math.cos(a)*u*120}" cy="${PIT.y-5+Math.sin(a)*u*90+u*u*80}" r="${8*(1-u)+3}" fill="#6b4122"/>`;} return o;} return ''; };
+  s+=splash(15.9)+splash(38.7);
+  s+=`</g>`;
+  // overlays (not zoomed)
+  if(t>=3.0&&t<6.0){ const a=Math.min(seg(t,3,3.3),1-seg(t,5.7,6)); s+=`<g opacity="${a}">${foxy()}${bubble(250,500,560,96,"Obstacle one. The mud pit.",230,640,30)}<text x="530" y="586" text-anchor="middle" font-family="DejaVu Sans" font-weight="600" font-size="22" fill="#5a6578">Let's see if he asks.</text></g>`; }
+  const card=(t0,t1,l1,l2)=>{ if(t>=t0&&t<t1){ const pop=Math.min(1,seg(t,t0,t0+.18)); const sc=pop<1? pop*1.12 : 1; const out=1-seg(t,t1-.25,t1); return mouse(300,700+(1-out)*260,sc,l1,l2);} return ''; };
+  s+=card(33.9,37.6,"NOT GOOD.");
+  s+=card(47.2,50.6,"THANK YOU.","HUGE THANK YOU.");
+  if(t>=36.0&&t<38.4) s+=bubble(760,200,300,80,"Come on, dawg.",1010,300,30);
+  s+=caption(t);
+  if(t<3.0) s+=titleCard(t,1-seg(t,2.6,3.0),"EVERY OBSTACLE NEEDS A FRIEND","Clip 1 · The Mud Pit");
+  if(t>=61.2){ const a=seg(t,61.2,61.7); const show2=t>=62.3;
+    s+=titleCard(t,a,"Asking for help is not a penalty.", show2?"Do it the Muscle Hero way!":"", show2?"Please Don't Help · a Paper Hero Club book":""); }
+  s+='</svg>';
+  document.getElementById('stage').innerHTML=s;
+}
+
+const BAR={x0:320,x1:1000,y:196};
+const RUNG=i=>360+(i-1)*86;
+function marigoldBig(t,x,y,cheer,run,gave){
+  const bounce=cheer>0? -Math.sin(Math.PI*cheer)*26 : Math.sin(t*2.2)*2;
+  const armA=cheer>0? lerp(-60,-170,Math.sin(Math.PI*cheer)) : -25+Math.sin(t*1.7)*6;
+  const step=run? Math.sin(t*14)*16 : 0;
+  return `<g transform="translate(${x},${y+bounce}) scale(1.05)" filter="url(#card)">
+   <g transform="rotate(${step},-10,-60)"><rect x="-16" y="-62" width="12" height="62" rx="5" fill="url(#skinD)"/><rect x="-20" y="-6" width="20" height="8" rx="3" fill="#f2f2f2"/></g>
+   <g transform="rotate(${-step},10,-60)"><rect x="4" y="-62" width="12" height="62" rx="5" fill="url(#skin)"/><rect x="2" y="-6" width="20" height="8" rx="3" fill="#f2f2f2"/></g>
+   <path d="M-30,-205 Q-60,-120 -50,-120 L50,-120 Q60,-120 30,-205Z" fill="#e6b93a"/>
+   <path d="M-26,-196 L26,-196 L56,-62 L-56,-62Z" fill="#f29a1e" ${S}/>
+   <g>${[-44,-22,0,22,44].map(x=>`<circle cx="${x}" cy="-62" r="12" fill="#f6c431" stroke="#d48a12" stroke-width="1.5"/>`).join('')}</g>
+   <path d="M-10,-150 l5,8 9,1 -7,6 2,9 -9,-5 -9,5 2,-9 -7,-6 9,-1z" fill="#fff6c8"/>
+   <g transform="rotate(${-armA},-26,-188)"><rect x="-34" y="-190" width="15" height="70" rx="7" fill="url(#skinD)" ${S}/></g>
+   <g transform="rotate(${armA},26,-188)"><rect x="19" y="-190" width="15" height="70" rx="7" fill="url(#skin)" ${S}/>
+     ${cheer>0||gave?'':`<path d="M38,-118 l5,10 11,1 -8,8 2,11 -10,-5 -10,5 2,-11 -8,-8 11,-1z" fill="#ffd23a" stroke="#b8860b" stroke-width="1.5"/>`}</g>
+   <ellipse cx="0" cy="-222" rx="44" ry="48" fill="#e6b93a"/>
+   <circle cx="0" cy="-226" r="36" fill="#fbe3cc" ${S}/>
+   <path d="M-36,-236 Q-30,-270 0,-268 Q30,-270 36,-236 Q20,-252 0,-250 Q-20,-252 -36,-236Z" fill="#e6b93a"/>
+   <circle cx="-12" cy="-226" r="5.5" fill="#2f6fd6"/><circle cx="12" cy="-226" r="5.5" fill="#2f6fd6"/>
+   <circle cx="-11" cy="-228" r="1.8" fill="#fff"/><circle cx="13" cy="-228" r="1.8" fill="#fff"/>
+   <circle cx="-22" cy="-212" r="6" fill="#f4a0a0" opacity=".6"/><circle cx="22" cy="-212" r="6" fill="#f4a0a0" opacity=".6"/>
+   ${cheer>0?`<ellipse cx="0" cy="-208" rx="9" ry="8" fill="#8f1d17"/>`:`<path d="M-11,-210 q11,10 22,0" stroke="#1d2740" stroke-width="3" fill="none" stroke-linecap="round"/>`}
+   <circle cx="30" cy="-258" r="11" fill="#f29a1e"/><circle cx="30" cy="-258" r="4" fill="#f6c431"/>
+  </g>`;
+}
+function setMB(t,lightOn){
+  let g=`<defs><linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6b26b"/><stop offset=".55" stop-color="#fbd9a0"/><stop offset="1" stop-color="#fff0cf"/></linearGradient>
+   <linearGradient id="barRed" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ef5a4c"/><stop offset="1" stop-color="#b02f25"/></linearGradient></defs>`;
+  g+=`<rect width="${W}" height="${H}" fill="url(#gold)"/><circle cx="1120" cy="150" r="70" fill="#fff4c4" opacity=".85"/>`;
+  const cx=(t*5)%1500;
+  g+=`<g fill="#fff" opacity=".7"><ellipse cx="${200+cx-150}" cy="90" rx="110" ry="26"/><ellipse cx="${900-cx*0.5}" cy="60" rx="120" ry="24"/></g>`;
+  let fence=''; for(let x=230;x<W;x+=46) fence+=`<path d="M${x},478 V352 L${x+21},334 L${x+42},352 V478Z" fill="#ead9b8" stroke="#b9a37c" stroke-width="2"/>`;
+  g+=fence+`<rect x="230" y="380" width="${W-230}" height="10" fill="#d5c098"/><rect x="230" y="440" width="${W-230}" height="10" fill="#d5c098"/>`;
+  g+=`<g filter="url(#card)" transform="translate(150,40) scale(.62)"><path d="M470,480 V330 Q660,232 850,330 V480 H830 V340 Q660,256 490,340 V480Z" fill="#1fa04a"/><rect x="560" y="316" width="200" height="66" rx="4" fill="#fbfbf7"/></g>
+   <text x="559" y="252" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="14" fill="#c8312b">BACKYARD</text><text x="559" y="269" text-anchor="middle" font-family="DejaVu Sans" font-weight="700" font-size="14" fill="#2a5bd7">GAUNTLET</text>`;
+  g+=`<rect y="470" width="${W}" height="${H-470}" fill="url(#grass)"/><rect y="470" width="${W}" height="${H-470}" fill="#ffb347" opacity=".12"/>`;
+  for(let i=0;i<60;i++){const x=(i*97)%W, y=490+((i*53)%220); g+=`<path d="M${x},${y} l3,-9 M${x+5},${y} l-2,-8" stroke="#3f8a3a" stroke-width="2"/>`;}
+  g+=`<ellipse cx="1180" cy="520" rx="70" ry="14" fill="#7a5230" opacity=".55"/>`; // dried mud pit, far back
+  g+=`<g filter="url(#card)"><rect x="0" y="250" width="232" height="250" fill="#efe6d6"/><path d="M-10,256 L242,256 L242,232 L-10,232Z" fill="#a8432e"/>
+     <rect x="70" y="330" width="78" height="150" fill="#7a4b2a"/><rect x="40" y="478" width="200" height="22" fill="#c9a77c"/></g>`;
+  g+=`<g transform="translate(180,478) scale(.36)" filter="url(#card)">${eric({})}</g>`;
+  g+=`<circle cx="200" cy="304" r="${lightOn?70:0}" fill="url(#glow)"/><circle cx="200" cy="304" r="10" fill="${lightOn?'#fff3a8':'#e8e2c8'}" stroke="#555" stroke-width="2"/>`;
+  return g;
+}
+function monkeyBars(t,count){
+  let g=`<g filter="url(#card)">
+   <path d="M${BAR.x0-30},640 L${BAR.x0},${BAR.y} L${BAR.x0+18},${BAR.y} L${BAR.x0-12},640Z M${BAR.x0+40},640 L${BAR.x0+6},${BAR.y} L${BAR.x0+24},${BAR.y} L${BAR.x0+58},640Z" fill="url(#barRed)"/>
+   <path d="M${BAR.x1-30},640 L${BAR.x1},${BAR.y} L${BAR.x1+18},${BAR.y} L${BAR.x1-12},640Z M${BAR.x1+40},640 L${BAR.x1+6},${BAR.y} L${BAR.x1+24},${BAR.y} L${BAR.x1+58},640Z" fill="url(#barRed)"/>
+   <rect x="${BAR.x0-6}" y="${BAR.y-12}" width="${BAR.x1-BAR.x0+36}" height="14" rx="5" fill="url(#barRed)"/></g>`;
+  for(let i=1;i<=8;i++){ const lit=i<=count; g+=`<rect x="${RUNG(i)-4}" y="${BAR.y-4}" width="8" height="16" rx="3" fill="${lit?'#ffd23a':'#aeb6bf'}" stroke="#5f6670" stroke-width="1.5"/>`;
+    if(lit) g+=`<text x="${RUNG(i)}" y="${BAR.y-22}" text-anchor="middle" font-family="DejaVu Sans" font-weight="800" font-size="20" fill="#c22420">${i}</text>`; }
+  // crutches leaning on the left post
+  g+=`<g><line x1="${BAR.x0-58}" y1="642" x2="${BAR.x0-20}" y2="452" stroke="url(#steel)" stroke-width="7" stroke-linecap="round"/><line x1="${BAR.x0-78}" y1="642" x2="${BAR.x0-26}" y2="458" stroke="url(#steel)" stroke-width="7" stroke-linecap="round"/>
+   <path d="M${BAR.x0-30},446 q10,-8 20,2" fill="none" stroke="#6b7380" stroke-width="5"/><path d="M${BAR.x0-36},452 q10,-8 20,2" fill="none" stroke="#6b7380" stroke-width="5"/></g>`;
+  return g;
+}
+// rung arrival times
+const HOPS=[[19.0,0,1],[21.6,1,2],[32.8,2,3],[34.4,3,4],[43.2,4,5],[55.6,5,6]];
+const COUNTS=[[19.4,"One!"],[21.9,"Two!"],[33.1,"Three!"],[34.7,"Four?! You've never done four!"],[43.5,"Five! You're flying!"],[55.9,"Six!"],[67.9,"Same time tomorrow? I'll count to seven."]];
+function render2(t){
+  let mx,my,mrot=0,walking=false,ph=0,hang=false,noCrutch=false,fire=false,kick=0,star=false;
+  const HY=BAR.y+312;
+  const showCr=t>=8.6; // crutches on the post
+  if(t<3.2){ mx=-140; my=640; }
+  else if(t<8.0){ const u=seg(t,3.2,8.0); mx=lerp(-140,250,u); my=640; walking=true; ph=(t-3.2)*Math.PI/0.9; }
+  else if(t<8.6){ mx=250; my=640; }
+  else if(t<18.3){ mx=lerp(250,300,ease(seg(t,8.6,9.4))); my=640; noCrutch=true; }
+  else if(t<19.0){ const u=ease(seg(t,18.3,19.0)); mx=lerp(300,RUNG(1),u); my=lerp(640,HY,u)-Math.sin(Math.PI*u)*30; hang=u>.45; noCrutch=!hang; }
+  else if(t<57.3){ hang=true; my=HY; let r=1;
+    for(const [t0,a,b] of HOPS){ if(t>=t0-0.7&&t<t0){ const u=ease(seg(t,t0-0.7,t0)); mx=lerp(RUNG(Math.max(a,1)),RUNG(b),u); my=HY-Math.sin(Math.PI*u)*10; mrot=Math.sin(Math.PI*u)*-8; kick=Math.sin(Math.PI*u)*18; r=-1; break;} if(t>=t0) r=b; }
+    if(r>0){ mx=RUNG(r); mrot=Math.sin(t*3.2)*3; }
+    fire=t>=48.0&&t<55.0; }
+  else if(t<58.0){ const u=seg(t,57.3,58.0); mx=RUNG(6)+u*20; my=lerp(HY,640,u*u); hang=u<.25; noCrutch=!hang; mrot=u*-6; }
+  else { mx=RUNG(6)+20; my=640+Math.max(0,Math.sin(Math.PI*seg(t,58,58.25)))*-10; noCrutch=true; star=t>=59.6; }
+  let count=0; for(const [t0,a,b] of HOPS) if(t>=t0) count=b;
+  // Marigold
+  let gx=1120, run=false, cheer=0;
+  for(const [t0] of COUNTS.slice(0,6)) if(t>=t0-0.1&&t<t0+0.6) cheer=seg(t,t0-0.1,t0+0.6);
+  if(t>=58.1&&t<59.4){ gx=lerp(1120,RUNG(6)+150,ease(seg(t,58.1,59.4))); run=true; }
+  else if(t>=59.4){ gx=RUNG(6)+150; }
+  if(t>=59.4&&t<59.9) cheer=seg(t,59.4,59.9);
+  const lightOn=t>=74.2&&t<74.7;
+  const z=t>=60&&t<75.5? 1+0.18*ease(seg(t,60,61.2)) : 1;
+  const camX=RUNG(6)+80, camY=470;
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${DEFS}`;
+  s+=`<g transform="translate(${camX},${camY}) scale(${z}) translate(${-camX},${-camY})">`;
+  s+=setMB(t,lightOn);
+  s+=`<ellipse cx="${mx}" cy="644" rx="${hang?48:70}" ry="10" fill="#00000030"/><ellipse cx="${gx}" cy="644" rx="55" ry="9" fill="#00000030"/>`;
+  s+=monkeyBars(t,count);
+  if(!showCr) {}
+  s+=marigoldBig(t,gx,640,cheer,run,t>=59.6);
+  s+=`<g transform="translate(${mx},${my}) rotate(${mrot},0,${hang?-312:0})" filter="url(#card)">${muscleHero({t,walk:ph,walking,hang,noCrutch,fire,kick,star})}</g>`;
+  // grass puff on landing
+  if(t>=57.9&&t<58.5){ const u=seg(t,57.9,58.5); for(let i=0;i<7;i++){ const a=-Math.PI*(0.1+0.8*i/6); s+=`<circle cx="${mx+Math.cos(a)*u*90}" cy="${640+Math.sin(a)*u*40}" r="${6*(1-u)+2}" fill="#5a9e4b"/>`; } }
+  // sparkles on each count
+  for(const [t0,a,b] of HOPS){ if(t>=t0&&t<t0+0.7){ const u=seg(t,t0,t0+0.7); for(let i=0;i<6;i++){ const a2=i*Math.PI/3; s+=`<circle cx="${RUNG(b)+Math.cos(a2)*u*40}" cy="${BAR.y+Math.sin(a2)*u*40}" r="${4*(1-u)+1}" fill="#ffd23a"/>`; } } }
+  s+=`</g>`;
+  // Foxy opener
+  if(t>=3.0&&t<6.0){ const a=Math.min(seg(t,3,3.3),1-seg(t,5.7,6)); s+=`<g opacity="${a}">${foxy()}${bubble(250,500,560,96,"Obstacle two. The monkey bars.",230,640,30)}</g>`; }
+  // Marigold's lines as bubbles (top right, off faces)
+  for(const [t0,txt] of COUNTS){ const d=txt.length>14?2.9:1.6; if(t>=t0-0.15&&t<t0+d){ const a=Math.min(1,seg(t,t0-0.15,t0+0.05))*(1-seg(t,t0+d-0.2,t0+d)); const w=Math.min(620,txt.length*17+70);
+      const bx=1250-w; s+=`<g opacity="${a}">${bubble(bx,40,w,84,txt,t>=60?1060:1140,150,txt.length>14?26:34)}</g>`; } }
+  // mouse cards
+  const card=(t0,t1,l1,l2)=>{ if(t>=t0&&t<t1){ const pop=Math.min(1,seg(t,t0,t0+.18)); const sc=pop<1? pop*1.12 : 1; const out=1-seg(t,t1-.25,t1); return mouse(170,700+(1-out)*260,sc*0.85,l1,l2);} return ''; };
+  s+=card(18.1,21.4,"EVERYTHING.");
+  s+=card(42.2,45.6,"NOT PLANNED.");
+  s+=caption(t);
+  if(t<3.0) s+=titleCard(t,1-seg(t,2.6,3.0),"EVERY OBSTACLE NEEDS A FRIEND","Clip 2 · Monkey Bars");
+  if(t>=75.5){ const a=seg(t,75.5,76.0); const show2=t>=76.6;
+    s+=titleCard(t,a,"Somebody counting out loud counts.", show2?"Do it the Muscle Hero way!":"", show2?"Please Don't Help · a Paper Hero Club book":""); }
+  s+='</svg>';
+  document.getElementById('stage').innerHTML=s;
+}
+window.render=render2; render2(0);
+
+</script></body></html>
